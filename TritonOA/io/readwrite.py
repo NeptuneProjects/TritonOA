@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy.io import loadmat
 
-from TritonOA.io.env import Source, Dom, Pos, cInt, Ice, SSPraw, SSP, HS, BotBndry, TopBndry, Bndry, Box, Beam, Modes
+from TritonOA.env.env import Source, Dom, Pos, cInt, Ice, SSPraw, SSP, HS, BotBndry, TopBndry, Bndry, Box, Beam, Modes
 
 """
     translation of basic read functions from Mike Porter's
