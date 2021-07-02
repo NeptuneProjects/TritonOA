@@ -1,0 +1,17 @@
+name: TritonOA
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - cmocean
+  - feather-format
+  - jupyterlab
+  - matplotlib
+  - numba
+  - numpy
+  - pandas
+  - pip
+  - scipy
+  - pip:
+    - pyram
