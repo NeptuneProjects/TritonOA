@@ -1,15 +1,13 @@
-from copy import deepcopy
-
 from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap as LCM
 import numpy as np
 from scipy.interpolate import interp1d
 
-
 '''
 Objects for interfacing with Michael Porter's models.
-Designed in analog with the types of objects called by read_shd, write_fieldflp, write_env, etc.
+Designed in analog with the types of objects called by read_shd,
+write_fieldflp, write_env, etc.
 '''
 
 
@@ -71,15 +69,25 @@ class SSPraw:
         self.rho_f = interp1d(self.z, self.rho)
         self.alphaR_f = interp1d(self.z, self.alphaR)
         self.alphaI_f = interp1d(self.z, self.alphaI)
-        return self.alphaR_f, self.betaR_f, self.rho_f, self.alphaI_f, self.betaI_f
+        return self.alphaR_f, self.betaR_f, self.rho_f, \
+            self.alphaI_f, self.betaI_f
 
 class SSP:
-    def __init__(self, raw, depth, NMedia, Opt=None, N=None, sigma=0, ranges=0):
+    def __init__(
+            self,
+            raw,
+            depth,
+            NMedia,
+            Opt=None,
+            N=None,
+            sigma=0,
+            ranges=0
+        ):
         self.NMedia	= NMedia # number of media layers
         self.Opt = Opt # Top option
-        self.N			=	N	 # array with num points in each layer, don't include one for halfpace
-        self.sigma		=	sigma	 # ''interfacial roughness'', one for each layer? see Kuperman and ingenito 1977 for definition, include a point for the halfspace
-        self.depth		=	depth # depth array for layers
+        self.N = N	 # array with num points in each layer, don't include one for halfpace
+        self.sigma = sigma	 # ''interfacial roughness'', one for each layer? see Kuperman and ingenito 1977 for definition, include a point for the halfspace
+        self.depth = depth # depth array for layers
         self.ranges = ranges
         self.raw = raw # list of raw ssp profile
         self.sspf = None
@@ -91,12 +99,30 @@ class SSP:
             self.ssp_vals = np.zeros((len(self.depth), 1))
             if self.NMedia == 2:
                 layer_depth = self.raw[0].z[-1]
-                self.sspf = lambda z: np.piecewise(z, [z<layer_depth, z>=layer_depth], [lambda z: self.raw[0].sspf(z), lambda z: self.raw[1].sspf(z)])
+                self.sspf = lambda z: np.piecewise(
+                    z,
+                    [z<layer_depth, z>=layer_depth],
+                    [
+                        lambda z: self.raw[0].sspf(z),
+                        lambda z: self.raw[1].sspf(z)
+                    ]
+                )
             elif self.NMedia == 3:
                 layer_depth_one = self.raw[0].z[-1]
                 layer_depth_two = self.raw[1].z[-1]
-                func1 = lambda z: np.piecewise(z, [z<layer_depth_one, z>= layer_depth_one], [lambda z: self.raw[0].sspf(z), lambda z: self.raw[1].sspf(z)])
-                self.sspf = lambda z: np.piecewise(z, [z<layer_depth_two, z>= layer_depth_two], [lambda z: func1(z), lambda z: self.raw[2].sspf(z)])
+                func1 = lambda z: np.piecewise(
+                    z,
+                    [z<layer_depth_one, z>= layer_depth_one],
+                    [
+                        lambda z: self.raw[0].sspf(z),
+                        lambda z: self.raw[1].sspf(z)
+                    ]
+                )
+                self.sspf = lambda z: np.piecewise(
+                    z,
+                    [z<layer_depth_two, z>= layer_depth_two],
+                    [lambda z: func1(z), lambda z: self.raw[2].sspf(z)]
+                )
             else:
                 raise ValueError("too many layers")
         else:
@@ -105,7 +131,14 @@ class SSP:
 
 
 class HS:
-    def __init__(self, alphaR=np.array([]), betaR=np.array([]), rho=np.array([]), alphaI=np.array([]), betaI=np.array([])):
+    def __init__(
+            self,
+            alphaR=np.array([]),
+            betaR=np.array([]),
+            rho=np.array([]),
+            alphaI=np.array([]),
+            betaI=np.array([])
+        ):
         self.alphaR = np.array(alphaR)
         self.betaR = np.array(betaR)
         self.rho = np.array(rho)
@@ -140,7 +173,21 @@ class Box:
 
 
 class Beam:
-    def __init__(self, RunType=None, Type=None,Nbeams=None, Ibeam=None, Nrays=None, alpha=None, deltas=None, box=None, epmult=None, rloop=None, Ibwin=None, Nimage = None):
+    def __init__(
+            self,
+            RunType=None,
+            Type=None,
+            Nbeams=None,
+            Ibeam=None,
+            Nrays=None,
+            alpha=None,
+            deltas=None,
+            box=None,
+            epmult=None,
+            rloop=None,
+            Ibwin=None,
+            Nimage = None
+        ):
         self.RunType = RunType
         self.Type = Type
         self.Nbeams =  Nbeams
