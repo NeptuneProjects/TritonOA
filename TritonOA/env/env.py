@@ -32,7 +32,7 @@ class Pos:
 
 class Ice:
     def __init__(self, BumDen, eta, xi):
-        self.BumDen=  BumDen
+        self.BumDen = BumDen
         self.eta = eta
         self.xi = xi
 
@@ -438,3 +438,29 @@ class KernInput:
         self.gs = np.flip(Fields.greens_mat, axis=1) # move source off axis
         self.env = env
         self.Pos = self.Field_r.Pos
+
+
+def default_SSP(SSP_TYPE, Z, CP=1500, dC=50, RHO=None, AP=None, AS=None):
+
+    if SSP_TYPE == "isospeed":
+        CP = CP * np.ones(Z.shape) # P-wave speed (m/s)
+    elif SSP_TYPE == "positive":
+        CP = np.linspace(CP-dC/2, CP+dC/2, len(Z))
+    elif SSP_TYPE == "negative":
+        CP = np.linspace(CP+dC/2, CP-dC/2, len(Z))
+
+    CS = 0 * np.ones(Z.shape) # S-wave speed (m/s)
+    if RHO is not None:
+        RHO = RHO * np.ones(Z.shape)
+    else:
+        RHO = 1.035 * np.ones(Z.shape) # Density (g/cm3)
+    if AP is not None:
+        AP *= np.ones(Z.shape)
+    else:
+        AP = 0.0015 * np.ones(Z.shape) # P-wave attenuation (dB/kmHz)
+    if AS is not None:
+        AS *= np.ones(Z.shape)
+    else:
+        AS = 0 * np.ones(Z.shape) # S-wave attenuation (dB/kmHz)
+
+    return {'CP': CP, 'CS': CS, 'RHO': RHO, 'AP': AP, 'AS': AS}

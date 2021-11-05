@@ -1,4 +1,5 @@
 import os
+import pickle
 import re
 from struct import unpack
 
@@ -36,16 +37,16 @@ def write_fieldflp(flpfil, Option, Pos, **kwargs):
 
     if 'scooter' in kwargs.keys():
         with open(flpfil, 'w') as f:
-            f.write('\'' + '{:4}'.format(Option) + ' \'' + ' ! Option \r\n')
-            f.write('{:5d}'.format(len(Pos.r.range)) + ' \t \t \t \t ! NRR')
+            f.write('\'' + f'{Option:4}' + ' \'' + ' ! Option \r\n')
+            f.write(f'{len(Pos.r.range):5d}' + ' \t \t \t \t ! NRR')
             if ( len( Pos.r.range ) > 2) and equally_spaced( Pos.r.range ):
-                f.write('\r\n    ' + '{:6f}'.format(Pos.r.range[0]))
-                f.write('\r\n    ' + '{:6f}'.format(Pos.r.range[-1]))
+                f.write('\r\n    ' + f'{Pos.r.range[0]:6f}')
+                f.write('\r\n    ' + f'{Pos.r.range[-1]:6f}')
             elif len(Pos.r.range) == 1:
-                f.write('\r\n    ' + '{:6f}'.format(Pos.r.range[0]) + '  ')
+                f.write('\r\n    ' + f'{Pos.r.range[0]:6f}' + '  ')
             else:
                 for i in range(len(Pos.r.range)):
-                    f.write('\r\n    ' + '{:6f}'.format(Pos.r.range[i]) + '  ')
+                    f.write('\r\n    ' + f'{Pos.r.range[i]:6f}' + '  ')
 
 
             f.write( '/ \t ! RR(1)  ... (km) \r\n' )
@@ -152,8 +153,8 @@ def write_env( envfil, model, TitleEnv, freq, ssp, bdry, pos, beam, cint, RMax, 
 
 
     f.write('\'' + TitleEnv + '\' ! Title \r\n')
-    f.write('{:8.2f}'.format(freq) +' \t \t \t ! Frequency (Hz) \r\n')
-    f.write('{:5d}'.format(ssp.NMedia)+ ' \t \t \t ! NMedia \r\n')
+    f.write(f'{freq:8.2f}' +' \t \t \t ! Frequency (Hz) \r\n')
+    f.write(f'{ssp.NMedia:5d}'+ ' \t \t \t ! NMedia \r\n')
     f.write('\'' + bdry.Top.Opt + '\''+ ' \t \t \t ! Top Option \r\n')
 
     if ( bdry.Top.Opt[0] == 'A' ): # analytic boundary
@@ -211,13 +212,13 @@ def write_env( envfil, model, TitleEnv, freq, ssp, bdry, pos, beam, cint, RMax, 
     else:
         f.write('\r\n    ')#{:6f}  '.format( pos.s.depth[0] ))
         for tmp_depth in pos.s.depth:
-            f.write('{:6f} '.format(tmp_depth) )
+            f.write(f'{tmp_depth:6f} ')
 
     f.write('/ \t ! SD(1)  ... (m) \r\n' )
 
     # receiver depths
 
-    f.write('{:5d} \t \t \t \t ! NRD'.format(len( pos.r.depth ) ))
+    f.write(f'{len(pos.r.depth):5d} \t \t \t \t ! NRD')
 
     if ( len( pos.r.depth ) >= 2) and equally_spaced( pos.r.depth ) :
         f.write('\r\n    {:6f} '.format(pos.r.depth[0]) + '{:6f} '.format( pos.r.depth[-1]))
@@ -231,12 +232,12 @@ def write_env( envfil, model, TitleEnv, freq, ssp, bdry, pos, beam, cint, RMax, 
     # receiver ranges
     if (model ==  'BELLHOP' ) or  (model == 'FirePE' ) :
         # receiver ranges
-        f.write('{:5d} \t \t \t \t ! NRR'.format(len( pos.r.range ) ))
+        f.write(f'{len(pos.r.range):5d} \t \t \t \t ! NRR')
 
         if ( len( pos.r.range ) >= 2) and equally_spaced( pos.r.range ) :
             f.write('\r\n    {:6f} '.format(pos.r.range[0]) + '{:6f} '.format(pos.r.range[-1]))
         else:
-            f.write('\r\n    {:6f}  '.format(pos.r.range[0] ))
+            f.write(f'\r\n    {pos.r.range[0]:6f}  ')
         f.write('/ \t ! RR(1)  ... (km) \r\n' )
         write_bell(f, beam )
 
@@ -1273,3 +1274,100 @@ def read_arrivals_asc(fname, narrmx=200):
     #end	% next source depth
 
     #fclose( fid );
+
+# The following functions were written by:
+# William Jenkins
+# Scripps Institution of Oceanography, 2021
+
+def dict2pkl(parameters, fname):
+    with open(fname, 'wb') as f:
+        pickle.dump(parameters, f, protocol=pickle.HIGHEST_PROTOCOL)
+    return fname
+
+def pkl2dict(fname):
+    with open(fname, 'rb') as f:
+        data = pickle.load(f)
+    return data
+
+
+def build_env(parameters):
+    ssp = SSPraw(
+        parameters['Z'],
+        parameters['CP'],
+        parameters['CS'],
+        parameters['RHO'],
+        parameters['AP'],
+        parameters['AS']
+    )
+    
+    top = TopBndry(parameters['TOPOPT'])
+
+    halfspace = HS(
+        parameters['CPB'],
+        parameters['CSB'],
+        parameters['RHOB'],
+        parameters['APB'],
+        parameters['ASB']
+    )
+
+    bottom = BotBndry(parameters['BOTOPT'], halfspace)
+
+    bdy = Bndry(top, bottom)
+    
+    depth = [0, parameters['ZB']]
+    ssp_list = [ssp]
+    NMESH = [parameters['NMESH']]
+    sigma = [parameters['SIGMA_TOP'], parameters['SIGMA_BOT']] # Roughness at each layer; only affects attenuation (imag. part)
+    ssp = SSP(
+        ssp_list,
+        depth,
+        parameters['NMEDIA'],
+        parameters['TOPOPT'],
+        NMESH,
+        sigma
+    )
+
+    cLim = cInt(parameters['CLOW'], parameters['CHIGH'])
+    
+    s = Source([parameters['SD']])
+    r = Dom(parameters['R'], parameters['RD'])
+    pos = Pos(s,r)
+    
+    pos.Nsd = parameters['NSD']
+    pos.Nrd = parameters['NRD']
+
+    write_env(
+        f"{parameters['TITLE']}.env",
+        "KRAKEN",
+        parameters['TITLE'],
+        parameters['FREQ'],
+        ssp,
+        bdy,
+        pos,
+        [],
+        cLim,
+        parameters['RMAX']
+    )
+    
+    envfil = f'{parameters["TITLE"]}.env'
+    
+    return pos, envfil
+
+
+def format_modes(parameters, fname=None):
+    options = {'fname': f'{parameters["TITLE"]}.mod', 'freq':0}
+    modes = read_modes(**options)
+    
+    k = modes.k
+    k = np.expand_dims(k, 1)
+    
+    phi = modes.phi
+
+    mask = np.isclose(parameters['SD'], modes.z)
+    phi_src = phi[mask, :]
+    if parameters['SD'] in parameters['RD']:
+        phi_rec = phi
+    else:
+        phi_rec = phi[np.invert(mask), :]
+    
+    return phi_src, phi_rec, k, modes
