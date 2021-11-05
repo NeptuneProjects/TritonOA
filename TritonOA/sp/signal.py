@@ -13,3 +13,7 @@ def pressure_field(phi_src, phi_rec, k, r):
     p = np.pi * 1j / (1.) * p
     p = np.conj(p)
     return p
+
+
+def mfp():
+    pass
