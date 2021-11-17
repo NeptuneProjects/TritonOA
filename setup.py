@@ -8,7 +8,14 @@ def setup_package():
         url='https://github.com/NeptuneProjects/TritonOA',
         author='William F. Jenkins II',
         author_email='wjenkins@ucsd.edu',
-        packages=['TritonOA', 'TritonOA.env'],
+        packages=[
+            'TritonOA',
+            'TritonOA.env',
+            'TritonOA.io',
+            'TritonOA.models',
+            'TritonOA.plotting',
+            'TritonOA.sp'
+        ],
         # scripts=['RISCluster/runDEC'],
         # entry_points = {
         #     'console_scripts': [
