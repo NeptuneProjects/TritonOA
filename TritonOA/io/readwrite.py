@@ -1113,7 +1113,7 @@ def read_modes(**kwargs):
 
            # advance to the next frequency
             if ( ifreq < freq_index ):
-                iRecProfile = iRecProfile + 2 + M + 1 + floor( ( 2 * M - 1 ) / lrecl );   # advance to next profile
+                iRecProfile = iRecProfile + 2 + M + 1 + np.floor( ( 2 * M - 1 ) / lrecl );   # advance to next profile
                 rec = iRecProfile;
                 f.seek(rec * lrecl)
 
