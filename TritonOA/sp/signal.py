@@ -5,7 +5,7 @@ def bartlett(K, r_hat):
     w = r_hat / np.linalg.norm(r_hat)
     B = abs(w.conj().T @ K @ w)
 
-    return float(B)
+    return B
 
 
 def pressure_field(phi_src, phi_rec, k, r):
