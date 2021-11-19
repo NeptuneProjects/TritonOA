@@ -16,4 +16,5 @@ dependencies:
   - tqdm
   - pip:
     - git+https://$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@github.com/NeptuneProjects/TritonOA.git@master
+    # - pip install git+https://NeptuneProjects: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@github.com/NeptuneProjects/TritonOA.git
     - pyram
