@@ -123,7 +123,7 @@ def plot_MFP(
 
     # Plot actual location:
     if (sr is not None) and (sd is not None):
-        plt.scatter(rvec[rvec == sr], zvec[zvec == sd], c='r', s=20**2, marker='*')
+        plt.scatter(sr, sd, c='r', s=20**2, marker='*')
     
     plt.title(f'Act. (Est.) Range = {sr} ({rvec[sr_ind_est]}) m, Depth = {sd} ({zvec[sd_ind_est]}) m')
 
