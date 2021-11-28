@@ -8,7 +8,7 @@ from TritonOA.io import readwrite
 from TritonOA.sp import signal
 
 
-def run_kraken(parameters, fname=None, shdflag=False, model='krakenc'):
+def run_kraken(parameters, shdflag=False, model='krakenc'):
 
     pos, _ = readwrite.build_env(parameters)
     retcode = subprocess.call(
@@ -30,7 +30,7 @@ def run_kraken(parameters, fname=None, shdflag=False, model='krakenc'):
     return pos, retcode
 
 
-def build_replica_field(parameters, verbose=False):
+def build_replica_field(parameters, verbose=False, **kwargs):
     SDvec = parameters['Z']
 
     P = np.zeros((len(SDvec), parameters['NR'], parameters['NRD']), dtype='complex_')
@@ -39,7 +39,7 @@ def build_replica_field(parameters, verbose=False):
         parameters['SD'] = SD
 
         # 1. Calculate modes for this source depth
-        pos, _ = run_kraken(parameters)
+        pos, _ = run_kraken(parameters, **kwargs)
         phi_src, phi_rec, k, modes = readwrite.format_modes(parameters)
 
         # 2. For every receiver depth, multiply phi(z=RD) * H(RR) ==> RR x NR matrix (e.g., 5000x16)
