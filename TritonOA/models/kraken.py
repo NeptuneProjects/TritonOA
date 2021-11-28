@@ -8,10 +8,11 @@ from TritonOA.io import readwrite
 from TritonOA.sp import signal
 
 
-def run_kraken(parameters, fname=None, shdflag=False):
+def run_kraken(parameters, fname=None, shdflag=False, model='krakenc'):
+
     pos, _ = readwrite.build_env(parameters)
     retcode = subprocess.call(
-        f'krakenc.exe {parameters["TITLE"]}',
+        f'{model}.exe {parameters["TITLE"]}',
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
