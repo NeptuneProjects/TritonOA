@@ -8,7 +8,7 @@ dependencies:
   - feather-format
   - jupyterlab
   - matplotlib
-  - numba
+  # - numba
   - numpy
   - pandas
   - pip
