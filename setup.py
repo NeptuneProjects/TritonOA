@@ -29,7 +29,7 @@ def setup_package():
             'feather-format',
             'jupyterlab',
             'matplotlib',
-            'numba',
+            # 'numba',
             'numpy',
             'pandas',
             'scipy'
