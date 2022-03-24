@@ -1,6 +1,7 @@
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.ticker as ticker
 import numpy as np
 
 # def plot_field(pos, pressure, ssp, bdy, FREQ, cInt, RMAX, show=False):
@@ -39,7 +40,7 @@ import numpy as np
 #         plt.close()
 #     return fig
 
-def plot_TL(pressure, pos, parameters, show=True):
+def plot_TL(pressure, pos, parameters, rangescale="m", vmin=-40, vmax=0, cmap='jet', figsize=(12, 9), show=True):
     CP = parameters.get('CP')
     Z = parameters.get('Z')
     ZB = parameters.get('ZB')
@@ -47,34 +48,46 @@ def plot_TL(pressure, pos, parameters, show=True):
     FREQ = parameters.get('FREQ')
 
     logpressure = 10 * np.log10(pressure / np.max(pressure))
-    levs = np.linspace(np.min(logpressure), np.max(logpressure), 40)
+    levs = np.linspace(np.min(logpressure), np.max(logpressure), 40) / 2
+    # levs = np.linspace(np.max(logpressure)-40, np.max(logpressure), 40)
 
-    fig = plt.figure(figsize=(12,9))
+    fig = plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(nrows=1, ncols=2, wspace=0, width_ratios=[1, 6])
 
+    # Plot Sound Speed Profile
     ax1 = fig.add_subplot(gs[0])
     ax1 = plt.subplot(1, 2, 1)
     plt.plot(CP, Z)
     plt.plot(CP[[0, -1]], [SD, SD], 'r')
     ax1.invert_yaxis()
     plt.ylim(ZB,0)
-    plt.xlabel("C (m/s)")
-    plt.ylabel("Depth (m)")
-    plt.text(CP[0]-15, SD, "Source", va="center")
-
+    plt.xticks(rotation=-45)
+    plt.grid()
+    # ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45)
+    plt.xlabel("C [m/s]")
+    # ax1.set_xlabel('C [m/s]', rotation=90)
+    plt.ylabel("Depth [m]")
+    # ax1.set_ylabel('Depth [m]', rotation=90)
+    # plt.text(CP[0]-5, SD+50, "Source", va="center")
+    
+    # Plot Transmission Loss
     ax2 = fig.add_subplot(gs[1])
-    vmin = -40
-    vmax = 0
-    plt.contourf(pos.r.range, pos.r.depth, (logpressure[0, 0, :, :]), levels=levs, cmap="jet", vmin=vmin, vmax=vmax)
+    if rangescale == "km":
+        r = pos.r.range / 1000
+        plt.xlabel("Range [km]")
+    else:
+        r = pos.r.range
+        plt.xlabel("Range [m]")
+    plt.contourf(r, pos.r.depth, (logpressure[0, 0, :, :]), levels=levs, cmap=cmap, vmin=vmin, vmax=vmax)
     # plt.imshow(pressure[0, 0, :, :])
     plt.gca().invert_yaxis()
+    
     plt.yticks([])
-    plt.xlabel("Range (m)")
     # plt.ylabel("Depth (m)")
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     # cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_spec))
-    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap="jet"))
-    cbar.set_label("SPL (dB)")
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap))
+    cbar.set_label("TL [dB]")
     plt.scatter(0, SD, s=500, c="r", marker=".")
 
     plt.title(f"Freq = {FREQ} Hz        SD = {SD} m")

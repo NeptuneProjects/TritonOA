@@ -5,6 +5,8 @@ from struct import unpack
 
 from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
+from scipy.interpolate import interp1d
 from scipy.io import loadmat
 
 from TritonOA.env.env import Source, Dom, Pos, cInt, Ice, SSPraw, SSP, HS, BotBndry, TopBndry, Bndry, Box, Beam, Modes
@@ -161,7 +163,7 @@ def write_env( envfil, model, TitleEnv, freq, ssp, bdry, pos, beam, cint, RMax, 
         f.write('     {:6.2f}'.format(ssp.depth[0]) + \
                     ' {:6.2f}'.format(bdry.Top.hs.alphaR) + \
                     ' {:6.2f}'.format(bdry.Top.hs.betaR) + \
-                    ' {:6.2g}'.format(bdry.Top.hs.rho) + \
+                    ' {:6.2f}'.format(bdry.Top.hs.rho) + \
                     ' {:6.2f}'.format(bdry.Top.hs.alphaI) + \
                     ' {:6.2f}'.format(bdry.Top.hs.betaI) + \
                     '  \t ! upper halfspace \r\n')
@@ -169,7 +171,6 @@ def write_env( envfil, model, TitleEnv, freq, ssp, bdry, pos, beam, cint, RMax, 
 
     # SSP
     for medium in range(ssp.NMedia):
-        print(medium)
         f.write('{:5d}'.format(ssp.N[ medium ]) + \
                 ' {:4.2f}'.format(ssp.sigma[ medium ]) + \
                 ' {:6.2f}'.format(ssp.depth[ medium+1 ]) + ' \t ! N sigma depth \r\n')
@@ -177,8 +178,8 @@ def write_env( envfil, model, TitleEnv, freq, ssp, bdry, pos, beam, cint, RMax, 
             f.write('\t {:6.2f} '.format(ssp.raw[ medium ].z[ ii ]) + \
                 '{:6.2f} '.format(ssp.raw[ medium ].alphaR[ ii ]) + \
                 '{:6.2f} '.format(ssp.raw[ medium ].betaR[ ii ]) + \
-                '{:6.2g}'.format(ssp.raw[ medium ].rho[ ii ] ) +  \
-                ' {:10.6f} '.format(ssp.raw[ medium ].alphaI[ ii ]) + \
+                '{:6.2f} '.format(ssp.raw[ medium ].rho[ ii ] ) +  \
+                '{:6.2f} '.format(ssp.raw[ medium ].alphaI[ ii ]) + \
                 '{:6.2f} '.format(ssp.raw[ medium ].betaI[ ii ]) + \
                 '/ \t ! z c cs rho \r\n')
 
@@ -1354,7 +1355,7 @@ def build_env(parameters):
     return pos, envfil
 
 
-def format_modes(parameters, fname=None):
+def format_modes(parameters):
     options = {'fname': f'{parameters["TITLE"]}.mod', 'freq':0}
     modes = read_modes(**options)
     
@@ -1371,3 +1372,19 @@ def format_modes(parameters, fname=None):
         phi_rec = phi[np.invert(mask), :]
     
     return phi_src, phi_rec, k, modes
+
+
+def load_CSV_to_SSP(path, z):
+    df = pd.read_csv(path)
+    Z_BT = np.array(df.Var1)
+    CP_BT = np.array(df.Var2)
+    print(f"Max Depth: {Z_BT.max()} m, c(z_max) = {CP_BT.max()} m/s")
+    f = interp1d(Z_BT, CP_BT)
+    CP = f(z)
+    CP[0:5] = CP[6]
+    CS = 0 * np.ones(z.shape)
+    RHO = 1.03 * np.ones(z.shape)
+    AP = 0 * np.ones(z.shape)
+    AS = 0 * np.ones(z.shape)
+    
+    return {'CP': CP, 'CS': CS, 'RHO': RHO, 'AP': AP, 'AS': AS}
