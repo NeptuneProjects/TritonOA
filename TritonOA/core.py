@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+from pathlib import Path
 import subprocess
 
 import numpy as np
@@ -143,7 +146,16 @@ class BioLayers:
 
 
 class ModelConfiguration:
-    def __init__(self, title, freq, layers, top, bottom, biolayers=None):
+    def __init__(
+            self,
+            title,
+            freq,
+            layers,
+            top,
+            bottom,
+            biolayers=None,
+            tmpdir=Path.cwd()
+        ):
         self.title = title
         self.freq = freq
         self.layers = layers
@@ -151,11 +163,16 @@ class ModelConfiguration:
         self.top = top
         self.bottom = bottom
         self.biolayers = biolayers
+        if isinstance(tmpdir, str):
+            tmpdir = Path(tmpdir)
+        self.tmpdir = tmpdir
+        # if tmpdir is None:
+            # self.tmpdir = Path.cwd()
     
 
     def run_model(self, model):
         retcode = subprocess.call(
-            f"{model}.exe {self.title}",
+            f"{model}.exe {self.tmpdir / self.title}",
             shell=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
@@ -164,7 +181,7 @@ class ModelConfiguration:
     
     
     def _write_envfil(self):
-        envfil = f'{self.title}.env'
+        envfil = self.tmpdir / f'{self.title}.env'
         with open(envfil, 'w') as f:
             # Block 1 - Title
             f.write(f"'{self.title}' ! Title \r\n")

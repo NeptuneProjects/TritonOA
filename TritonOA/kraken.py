@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-
+from pathlib import Path
 from struct import unpack
 
 import numpy as np
@@ -22,9 +24,10 @@ class KRAKENModelConfiguration(ModelConfiguration):
             chigh=None,
             nprof=1,
             rprof=0.,
-            biolayers=None
+            biolayers=None,
+            tmpdir=Path.cwd()
         ):
-        super().__init__(title, freq, layers, top, bottom, biolayers)
+        super().__init__(title, freq, layers, top, bottom, biolayers, tmpdir)
         self.source = source
         self.receiver = receiver
         self.clow = clow
@@ -79,7 +82,7 @@ class KRAKENModelConfiguration(ModelConfiguration):
         _ = self._write_envfil_KRAKEN()
         self.run_model(model=model)
         self.modes = Modes(self.freq, self.source, self.receiver)
-        self.modes.read_modes(self.title)
+        self.modes.read_modes(self.tmpdir / self.title)
         if fldflag:
             _ = self.modes.field()
         
