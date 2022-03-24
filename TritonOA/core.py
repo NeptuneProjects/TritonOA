@@ -9,8 +9,19 @@ import numpy as np
 
 class Array:
     def __init__(self, z: float):
-        self.z = z
+        self.z = np.atleast_1d(z)
         self.nz = len(np.atleast_1d(z))
+    
+
+    # @staticmethod
+    def equally_spaced(self):
+        n = len(self.z)
+        ztemp = np.linspace(self.z[0], self.z[-1], n)
+        delta = abs(self.z[:] - ztemp[:])
+        if np.max(delta) < 1e-9:
+            return True
+        else:
+            return False
 
 
 class Source(Array):

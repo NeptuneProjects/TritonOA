@@ -53,7 +53,8 @@ class KRAKENModelConfiguration(ModelConfiguration):
             # Number of Source Depths
             f.write(f"{self.source.nz:5d} \t \t \t \t ! NSD")
             # Source Depths
-            if (self.source.nz > 1) and self._equally_spaced(self.source.z):
+            # if (self.source.nz > 1) and self._equally_spaced(self.source.z):
+            if (self.source.nz > 1) and self.source.equally_spaced():
                 f.write(f"\r\n    {self.source.z[0]:6f} {self.source.z[-1]:6f}")
             else:
                 f.write(f"\r\n    ")
@@ -63,7 +64,8 @@ class KRAKENModelConfiguration(ModelConfiguration):
             # Number of Receiver Depths
             f.write(f"{self.receiver.nz:5d} \t \t \t \t ! NRD")
             # Receiver Depths
-            if (self.receiver.nz > 1) and self._equally_spaced(self.receiver.z):
+            # if (self.receiver.nz > 1) and self._equally_spaced(self.receiver.z):
+            if (self.receiver.nz > 1) and self.receiver.equally_spaced():
                 f.write(
                     f"\r\n    {self.receiver.z[0]:6f} {self.receiver.z[-1]:6f}"
                 )
@@ -87,15 +89,15 @@ class KRAKENModelConfiguration(ModelConfiguration):
             _ = self.modes.field()
         
 
-    @staticmethod
-    def _equally_spaced(x):
-        n = len(x)
-        xtemp = np.linspace(x[0], x[-1], n)
-        delta = abs(x[:] - xtemp[:])
-        if np.max(delta) < 1e-9:
-            return True
-        else:
-            return False
+    # @staticmethod
+    # def _equally_spaced(x):
+    #     n = len(x)
+    #     xtemp = np.linspace(x[0], x[-1], n)
+    #     delta = abs(x[:] - xtemp[:])
+    #     if np.max(delta) < 1e-9:
+    #         return True
+    #     else:
+    #         return False
 
 
 class Modes:
