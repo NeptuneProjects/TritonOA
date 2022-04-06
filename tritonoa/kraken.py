@@ -86,9 +86,10 @@ class KRAKENModelConfiguration(ModelConfiguration):
         return envfil
 
 
-    def run(self, model="krakenc", fldflag=False):
+    def run(self, model="krakenc", fldflag=False, verbose=False):
         '''Returns modes, pressure field, rvec, zvec'''
-        print(f"Running {model.upper()}")
+        if verbose:
+            print(f"Running {model.upper()}")
         _ = self._write_envfil_KRAKEN()
         self.run_model(model=model)
         self.modes = Modes(self.freq, self.source, self.receiver)
