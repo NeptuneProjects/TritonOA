@@ -10,11 +10,11 @@ def setup_package():
         author_email='wjenkins@ucsd.edu',
         packages=[
             'tritonoa',
-            'tritonoa.core',
-            'tritonoa.kraken',
-            'tritonoa.plotting',
-            'tritonoa.profiles',
-            'tritonoa.sp'
+            # 'tritonoa.core',
+            # 'tritonoa.kraken',
+            # 'tritonoa.plotting',
+            # 'tritonoa.profiles',
+            # 'tritonoa.sp'
         ],
         # scripts=['RISCluster/runDEC'],
         # entry_points = {
