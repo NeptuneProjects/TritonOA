@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 # import numpy as np
 
 def plot_TL_2d(
-        p, z, r,
+        p,
+        z=None,
+        r=None,
         title=None,
         xlabel="Range [km]",
         ylabel="Depth [m]",
@@ -22,14 +24,19 @@ def plot_TL_2d(
 
     # levs = np.linspace(np.min(p), np.max(p), 40) / 2
 
-    plt.imshow(
-        p,
-        extent=(
+    if (r is not None) and (z is not None):
+        extent = (
             r.min(),
             r.max(),
             z.min(),
             z.max()
-        ),
+        )
+    else:
+        extent = None
+
+    plt.imshow(
+        p,
+        extent=extent,
         aspect="auto",
         origin="lower",
         vmin=vmin,
