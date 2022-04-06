@@ -400,10 +400,11 @@ def run_kraken(parameters):
     # Receiver Parameters
     receiver = Receiver(
         z=parameters.get("rec_z"),
-        r_max=parameters.get("rec_r_max"),
-        nr=parameters.get("rec_nr"),
-        dr=parameters.get("rec_dr"),
-        r_min=parameters.get("rec_r_min", 1.e-3),
+        # r_max=parameters.get("rec_r_max"),
+        r=parameters.get("rec_r"),
+        # nr=parameters.get("rec_nr"),
+        # dr=parameters.get("rec_dr"),
+        # r_min=parameters.get("rec_r_min", 1.e-3),
         r_offsets=parameters.get("rec_r_offsets", 0.)
     )
 
