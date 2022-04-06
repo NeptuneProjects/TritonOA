@@ -64,20 +64,19 @@ class Receiver(Array):
     Attributes
     ----------
     z : array
-        Vector containing depths of the array elements.
+        Vector containing depths [m] of the array elements.
     nz : int
         Number of array elements.
+    r : float
+        Vector of ranges [km] at which field will be calculated.
     r_max : float
-        Maximum range of receiver range vector; alternatively, if
-        specified without nr or dr, sets the range of the receiver.
+        Maximum range [km] of receiver range vector.
     r_min : float, default=1e-3
-        Minimum range of receiver range vector.
+        Minimum range [km] of receiver range vector.
     nr : int, default=None
         Number of elements in receiver range vector.
-    dr : float, default=None
-        Range resolution of receiver range vector.
     r_offsets : array, default=0
-        Vector of receiver range offsets to account for array tilt.
+        Vector of receiver range offsets [m] to account for array tilt.
     n_offsets : int, default=1
         Length of vector of range offsets (r_offsets).
     '''
@@ -85,26 +84,37 @@ class Receiver(Array):
     def __init__(
             self,
             z: float,
-            r_max: float,
-            nr: int=None,
-            dr: float=None,
-            r_min: float=1e-3,
+            # r_max: float,
+            r: float,
+            # nr: int=None,
+            # dr: float=None,
+            # r_min: float=1e-3,
             r_offsets: float=0
         ):
         super().__init__(z)
-        self.r_min = r_min
-        self.r_max = r_max
-        if (nr is None) and (dr is not None):
-            self.dr = dr / 1e3
-            self.r = np.arange(self.r_min, self.r_max, self.dr)
-            self.nr = len(self.r)
-        elif (nr is not None) and (dr is None):
-            self.nr = nr
-            self.r = np.linspace(self.r_min, self.r_max, self.nr)
-            self.dr = 1e3 * (self.r[1] - self.r[0])
-        elif (nr is None) and (dr is None):
-            # raise ValueError("Range resolution undefined.")
-            self.r = self.r_max
+        self.r = np.atleast_1d(r)
+        if self.r[0] == 0:
+            self.r = self.r[1:]
+        self.r_min = np.min(self.r)
+        self.r_max = np.max(self.r)
+        self.nr = len(self.r)
+        # self.r_min = r_min
+        # self.r_max = r_max
+        # if r is not None:
+        #     self.r = r
+        #     self.nr = len(r)
+        #     self.r_max = 
+        # elif (nr is None) and (dr is not None):
+        #     self.dr = dr / 1e3
+        #     self.r = np.arange(self.r_min, self.r_max, self.dr)
+        #     self.nr = len(self.r)
+        # elif (nr is not None) and (dr is None):
+        #     self.nr = nr
+        #     self.r = np.linspace(self.r_min, self.r_max, self.nr)
+        #     self.dr = 1e3 * (self.r[1] - self.r[0])
+        # elif (nr is None) and (dr is None):
+        #     # raise ValueError("Range resolution undefined.")
+        #     self.r = self.r_max
         self.r_offsets = r_offsets
         self.n_offsets = len(np.atleast_1d(r_offsets))
 
