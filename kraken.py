@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
+'''This module contains classes and functions required to interact with
+the KRAKEN ocean acoustic modeling software.
+
+William Jenkins
+Scripps Institution of Oceanography
+wjenkins |a|t| ucsd |d|o|t| edu
+
+Licensed under GNU GPLv3; see LICENSE in repository for full text.
+'''
 
 from pathlib import Path
 from struct import unpack
 
 import numpy as np
-from scipy.special import hankel1
 
-from core import ModelConfiguration
-
+from core import ModelConfiguration, Layer, Source, SoundSpeedProfile, Receiver, Bottom, Top
+from sp import pressure_field
 
 class KRAKENModelConfiguration(ModelConfiguration):
     def __init__(
@@ -322,11 +330,13 @@ class Modes:
     
 
     def field(self):
-        p = (self.phi_src * self.phi_rec) @ \
-            hankel1(0, self.k * self.receiver.r * 1e3)
-        self.p = np.conj(np.pi * 1j / (1.) * p)
-        
-        return p
+        self.p = pressure_field(
+            self.phi_src,
+            self.phi_rec,
+            self.k,
+            self.receiver.r * 1000
+        )
+        return self.p
 
 
 class ModesHalfspace:
@@ -347,3 +357,76 @@ class ModesHalfspace:
         self.alphaI = alphaI
         self.betaI = betaI
         self.rho = rho
+
+
+def run_kraken(parameters):
+    
+    # Miscellaneous Parameters
+    title = parameters.get("title", "Kraken")
+    tmpdir = parameters.get("tmpdir", "tmp")
+    model = parameters.get("model", "KRAKENC")
+
+    # Top Parameters
+    top = Top(
+        opt=parameters.get("top_opt", "CVF    "),
+        z=parameters.get("top_z"),
+        c_p=parameters.get("top_c_p"),
+        c_s=parameters.get("top_c_s", 0.),
+        rho=parameters.get("top_rho"),
+        a_p=parameters.get("top_a_p", 0.),
+        a_s=parameters.get("top_a_s", 0.)
+    )
+
+    # Layer Parameters
+    layers = [Layer(SoundSpeedProfile(**kwargs)) for kwargs in parameters.get("layerdata")]
+
+    # Bottom Parameters
+    bottom = Bottom(
+        opt=parameters.get("bot_opt", "A"),
+        sigma=parameters.get("bot_sigma", 0.),
+        z=parameters.get("bot_z", layers[-1].z_max+1),
+        c_p=parameters.get("bot_c_p"),
+        c_s=parameters.get("bot_c_s", 0.),
+        rho=parameters.get("bot_rho"),
+        a_p=parameters.get("bot_a_p", 0.),
+        a_s=parameters.get("bot_a_s", 0.),
+        mz=parameters.get("bot_mz")
+    )
+
+    # Source Parameters
+    source = Source(z=parameters.get("src_z"))
+
+    # Receiver Parameters
+    receiver = Receiver(
+        z=parameters.get("rec_z"),
+        r_max=parameters.get("rec_r_max"),
+        nr=parameters.get("rec_nr"),
+        dr=parameters.get("rec_dr"),
+        r_min=parameters.get("rec_r_min", 1.e-3),
+        r_offsets=parameters.get("rec_r_offsets", 0.)
+    )
+
+    # Freq/Mode Parameters
+    freq = parameters.get("freq", 100.)
+    clow = parameters.get("clow", 1500.)
+    chigh = parameters.get("chigh", 1600.)
+
+    # Instantiate Model
+    kmodel = KRAKENModelConfiguration(
+        title,
+        freq,
+        layers,
+        top,
+        bottom,
+        source,
+        receiver,
+        clow=clow,
+        chigh=chigh,
+        tmpdir=tmpdir
+    )
+
+    # Run Model
+    kmodel.run(fldflag=True, model=model)
+
+    # Return Complex Pressure at Receiver
+    return kmodel.modes.p

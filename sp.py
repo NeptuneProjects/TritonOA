@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 '''This module contains commonly used signal processing functions for
 ocean acoustics workflows.
@@ -44,6 +43,7 @@ def normalize_pressure(p, log=False):
     pn : array
         Normalized pressure.
     '''
+
     pn = np.abs(p)
     pn /= np.max(pn)
     if log:
@@ -80,6 +80,7 @@ def pressure_field(phi_src, phi_rec, k, r):
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     '''
+
     p = (phi_src * phi_rec) @ hankel1(0, -k * r)
     p = np.conj(np.pi * 1j / (1.) * p)
     return p
@@ -111,6 +112,7 @@ def bartlett(K, r_hat):
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     '''
+
     w = r_hat / np.linalg.norm(r_hat)
     B = abs(w.conj().T @ K @ w)
     return B

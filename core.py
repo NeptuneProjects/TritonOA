@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
+'''This module contains objects common to the various ocean acoustics
+models in Acoustics Toolbox software.
+
+William Jenkins
+Scripps Institution of Oceanography
+wjenkins |a|t| ucsd |d|o|t| edu
+
+Licensed under GNU GPLv3; see LICENSE in repository for full text.
+'''
 
 from pathlib import Path
 import subprocess
@@ -8,6 +17,16 @@ import numpy as np
 
 
 class Array:
+    '''Specifies attributes of an acoustic array.
+
+    Attributes
+    ----------
+    z : array
+        Vector containing depths of the array elements.
+    nz : int
+        Number of array elements.
+    '''
+
     def __init__(self, z: float):
         self.z = np.atleast_1d(z)
         self.nz = len(np.atleast_1d(z))
@@ -25,13 +44,47 @@ class Array:
 
 
 class Source(Array):
+    '''Specifies attributes of acoustic source array.
+
+    Attributes
+    ----------
+    z : array
+        Vector containing depths of the array elements.
+    nz : int
+        Number of array elements.
+    '''
+
     def __init__(self, z: float):
         super().__init__(z)
 
 
 class Receiver(Array):
+    '''Specifies attributes of acoustic receiver array.
+
+    Attributes
+    ----------
+    z : array
+        Vector containing depths of the array elements.
+    nz : int
+        Number of array elements.
+    r_max : float
+        Maximum range of receiver range vector; alternatively, if
+        specified without nr or dr, sets the range of the receiver.
+    r_min : float, default=1e-3
+        Minimum range of receiver range vector.
+    nr : int, default=None
+        Number of elements in receiver range vector.
+    dr : float, default=None
+        Range resolution of receiver range vector.
+    r_offsets : array, default=0
+        Vector of receiver range offsets to account for array tilt.
+    n_offsets : int, default=1
+        Length of vector of range offsets (r_offsets).
+    '''
+
     def __init__(
-            self, z: float,
+            self,
+            z: float,
             r_max: float,
             nr: int=None,
             dr: float=None,
@@ -50,7 +103,8 @@ class Receiver(Array):
             self.r = np.linspace(self.r_min, self.r_max, self.nr)
             self.dr = 1e3 * (self.r[1] - self.r[0])
         elif (nr is None) and (dr is None):
-            raise ValueError("Range resolution undefined.")
+            # raise ValueError("Range resolution undefined.")
+            self.r = self.r_max
         self.r_offsets = r_offsets
         self.n_offsets = len(np.atleast_1d(r_offsets))
 
@@ -193,6 +247,7 @@ class ModelConfiguration:
     
     def _write_envfil(self):
         envfil = self.tmpdir / f'{self.title}.env'
+        self.tmpdir.mkdir(parents=True, exist_ok=True)
         with open(envfil, 'w') as f:
             # Block 1 - Title
             f.write(f"'{self.title}' ! Title \r\n")
