@@ -70,7 +70,7 @@ In later steps you will need to know what CPU chipset model you have.
 
 ## 4. Compile AT
 1. Navigate to `/AT` in Terminal.
-2. Run the command: `make clean`
+2. Run the command: `make clean`.
 3. Run the command: `make`.
 <br>*Note: Intel Fortran will take a few minutes to compile all the files.*
 4. Once complete, you can run tests per the AT documentation. For example, in Terminal navigate to `/AT/tests/Munk` and run:
