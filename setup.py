@@ -9,12 +9,12 @@ def setup_package():
         author='William F. Jenkins II',
         author_email='wjenkins@ucsd.edu',
         packages=[
-            'TritonOA',
-            'TritonOA.env',
-            'TritonOA.io',
-            'TritonOA.models',
-            'TritonOA.plotting',
-            'TritonOA.sp'
+            'tritonoa',
+            'tritonoa.core',
+            'tritonoa.kraken',
+            'tritonoa.plotting',
+            'tritonoa.profiles',
+            'tritonoa.sp'
         ],
         # scripts=['RISCluster/runDEC'],
         # entry_points = {
@@ -29,7 +29,6 @@ def setup_package():
             'feather-format',
             'jupyterlab',
             'matplotlib',
-            # 'numba',
             'numpy',
             'pandas',
             'scipy'
