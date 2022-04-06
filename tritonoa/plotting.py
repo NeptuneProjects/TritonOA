@@ -3,7 +3,7 @@
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import numpy as np
+# import numpy as np
 
 def plot_TL_2d(
         p, z, r,

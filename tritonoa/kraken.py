@@ -15,8 +15,8 @@ from struct import unpack
 
 import numpy as np
 
-from core import ModelConfiguration, Layer, Source, SoundSpeedProfile, Receiver, Bottom, Top
-from sp import pressure_field
+from tritonoa.core import ModelConfiguration, Layer, Source, SoundSpeedProfile, Receiver, Bottom, Top
+from tritonoa.sp import pressure_field
 
 class KRAKENModelConfiguration(ModelConfiguration):
     def __init__(

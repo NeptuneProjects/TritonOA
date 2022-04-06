@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import numpy as np
 
-from core import SoundSpeedProfile
+from tritonoa.core import SoundSpeedProfile
 
 class MunkSSP(SoundSpeedProfile):
     def __init__(self, z_max, dz=1):
