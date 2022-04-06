@@ -36,4 +36,4 @@ Future intended functionality:
 <br>`conda activate TritonOA`
 
 ## Use
-Jupyter notebooks illustrating various use cases and workflows are provided in the `Tutorials` folder.
+Jupyter notebooks illustrating various use cases and workflows are provided in the `tutorials` folder.
