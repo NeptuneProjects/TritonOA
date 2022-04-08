@@ -119,16 +119,15 @@ def bartlett(K, r_hat):
 
 
 # TODO: Build general purpose function for different beamformers.
-# def ambiguity_function(K, r_hat, atype="bartlett"):
-#     w = r_hat / np.linalg.norm(r_hat)
-
-
-#     if atype == "bartlett":
-#         B = None
-#     elif atype == "MV":
-#         B = None
-#     elif atype == "WNC":
-#         B = None
-#     elif atype == "MCM":
-#         B = None
-#     return B
+def ambiguity_function(K, r_hat, atype="bartlett"):
+    w = r_hat / np.linalg.norm(r_hat)
+    
+    if atype == "bartlett":
+        B = w.conj().T @ K @ w
+    elif atype == "MVDR":
+        B = (w.conj().T @ np.linalg.inv(K) @ w) ** -1
+    elif atype == "MCM":
+        B = None
+    elif atype == "WNC":
+        B = None
+    return abs(B)
