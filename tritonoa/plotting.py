@@ -18,6 +18,13 @@ def plot_SSP(
     if ax is None:
         ax = plt.gca()
 
+    # Insert NaN where discontinuities exist - makes cleaner plot.
+    ind = np.atleast_1d(np.argwhere(np.diff(z) == 0).squeeze())
+    if len(ind) >= 1:
+        if np.diff(c)[ind] != 0:
+            z = np.insert(z, ind+1, np.nan)
+            c = np.insert(c, ind+1, np.nan)
+
     ax.plot(c, z, **kwargs)
     if boundaries is not None:
         boundaries = np.atleast_1d(boundaries)
@@ -29,6 +36,7 @@ def plot_SSP(
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
     ax.set_ylabel(ylabel)
+    
     try:
         if c.max() < 1500:
             xlimhi = 1500
