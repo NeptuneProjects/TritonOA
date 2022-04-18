@@ -33,7 +33,7 @@ def setup_package():
             'pandas',
             'scipy'
         ],
-        version='0.0b0',
+        version='0.0b1',
         license='MIT',
         description="Package provides interface to acoustic modeling tools \
             of Acoustics Toolbox developed by Mike Porter."
