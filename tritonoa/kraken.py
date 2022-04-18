@@ -301,7 +301,9 @@ class Modes:
 
         self.title = title
         self.M = M
-        self.z = z
+        print(type(z))
+        self.z = np.array(z)
+        print(type(self.z))
         self.k = modes_k
         self.phi = modes_phi
         self.top = top
