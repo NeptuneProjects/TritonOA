@@ -9,6 +9,7 @@ def plot_TL_2d(
         p,
         z=None,
         r=None,
+        bottom=None,
         title=None,
         xlabel="Range [km]",
         ylabel="Depth [m]",
@@ -18,7 +19,8 @@ def plot_TL_2d(
         vmax=0,
         interpolation=None,
         cmap="jet",
-        show=True
+        show=True,
+        **pltkwargs
     ):
     fig = plt.figure(figsize=figsize, facecolor="w")
 
@@ -42,7 +44,8 @@ def plot_TL_2d(
         vmin=vmin,
         vmax=vmax,
         interpolation=interpolation,
-        cmap=cmap
+        cmap=cmap,
+        **pltkwargs
     )
     plt.gca().invert_yaxis()
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
@@ -54,9 +57,9 @@ def plot_TL_2d(
 
     if show:
         plt.show()
+        return fig
     else:
-        plt.close()
-    return fig
+        return fig, plt.gca()
 
 
 def plot_SSP():
