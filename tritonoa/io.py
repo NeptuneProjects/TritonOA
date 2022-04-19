@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''This module contains functions for reading and writing acoustic and 
+"""This module contains functions for reading and writing acoustic and 
 related data.
 
 William Jenkins
@@ -8,13 +8,13 @@ Scripps Institution of Oceanography
 wjenkins |a|t| ucsd |d|o|t| edu
 
 Licensed under GNU GPLv3; see LICENSE in repository for full text.
-'''
+"""
 
 from pathlib import Path
 
 import numpy as np
 from struct import unpack
-from math import ceil,floor
+from math import ceil, floor
 
 
 # class SioStream:
@@ -60,14 +60,8 @@ from math import ceil,floor
 #         return tmp
 
 
-def sioread(
-        fname,
-        s_start=1,
-        Ns=-1,
-        channels=[],
-        inMem=True
-    ):
-    '''Translation of Jit Sarkar's sioread.m to Python (which was a 
+def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
+    """Translation of Jit Sarkar's sioread.m to Python (which was a
     modification of Aaron Thode's with contributions from Geoff Edelman,
     James Murray, and Dave Ensberg).
     Translated by Hunter Akins, 4 June 2019
@@ -79,8 +73,8 @@ def sioread(
         Name/path to .sio data file to be read.
     s_start : int, default=1
         Sample number from which to begin reading. Must be an integer
-        multiple of the record number. To get the record number you can 
-        run the script with s_start = 1 and then check the header for 
+        multiple of the record number. To get the record number you can
+        run the script with s_start = 1 and then check the header for
         the info.
     Ns : int, default=-1
         Total samples to read
@@ -90,7 +84,7 @@ def sioread(
     inMem : bool, default=True
         Perform data parsing in ram (default true).
         False: Disk intensive, memory efficient. Blocks read
-        sequentially, keeping only requested channels. Not yet 
+        sequentially, keeping only requested channels. Not yet
         implemented
         True: Disk efficient, memory intensive. All blocks read at once,
         requested channels are selected afterwards.
@@ -101,13 +95,13 @@ def sioread(
         Data output matrix.
     Header : dict
         Descriptors found in file header.
-    '''
+    """
 
     # if 'fname' not in kwargs.keys():
-        # raise ValueError("must pass me a filename")
+    # raise ValueError("must pass me a filename")
     # file_name = kwargs['fname']
 
-    with open(fname, 'rb') as f:
+    with open(fname, "rb") as f:
         # Parameter checking
         # s_start = 1
         # if 's_start' in kwargs.keys():
@@ -124,57 +118,58 @@ def sioread(
         # else:
         #     channels = []
 
-
         # if 'inMem' in kwargs.keys():
         #     inMem = kwargs['inMem'] # false will read whole file before subsetting
         # else:
         #     inMem = True
 
         # Endian check
-        endian	=	'>'
+        endian = ">"
         f.seek(28)
-        bs	= unpack(endian +  'I', f.read(4))[0]		# should be 32677
+        bs = unpack(endian + "I", f.read(4))[0]  # should be 32677
         if bs != 32677:
-            endian	=	'<'
+            endian = "<"
             f.seek(28)
-            bs	=unpack(endian + 'I', f.read(4))[0]	# should be 32677
+            bs = unpack(endian + "I", f.read(4))[0]  # should be 32677
             if bs != 32677:
-                raise ValueError('Problem with byte swap constant:' + str(bs))
+                raise ValueError("Problem with byte swap constant:" + str(bs))
 
         f.seek(0)
-        ID	= int(unpack(endian + 'I', f.read(4))[0])	# ID Number
-        Nr	= int(unpack(endian + 'I', f.read(4))[0])	# # of Records in File
-        BpR	= int(unpack(endian + 'I', f.read(4))[0])	# # of Bytes per Record
-        Nc	= int(unpack(endian + 'I', f.read(4))[0])	# # of channels in File
-        BpS	= int(unpack(endian + 'I', f.read(4))[0])	# # of Bytes per Sample
+        ID = int(unpack(endian + "I", f.read(4))[0])  # ID Number
+        Nr = int(unpack(endian + "I", f.read(4))[0])  # # of Records in File
+        BpR = int(unpack(endian + "I", f.read(4))[0])  # # of Bytes per Record
+        Nc = int(unpack(endian + "I", f.read(4))[0])  # # of channels in File
+        BpS = int(unpack(endian + "I", f.read(4))[0])  # # of Bytes per Sample
         if BpS == 2:
-            dtype = 'h'
+            dtype = "h"
         else:
-            dtype = 'f'
-        tfReal = unpack(endian + 'I', f.read(4))[0] # 0 = integer, 1 = real
-        SpC  = unpack(endian + 'I', f.read(4))[0] # # of Samples per Channel
-        bs  = unpack(endian + 'I', f.read(4))[0] # should be 32677
-        fname = unpack('24s', f.read(24)) # File name
-        comment = unpack('72s', f.read(72)) # Comment String
+            dtype = "f"
+        tfReal = unpack(endian + "I", f.read(4))[0]  # 0 = integer, 1 = real
+        SpC = unpack(endian + "I", f.read(4))[0]  # # of Samples per Channel
+        bs = unpack(endian + "I", f.read(4))[0]  # should be 32677
+        fname = unpack("24s", f.read(24))  # File name
+        comment = unpack("72s", f.read(72))  # Comment String
 
-        RpC  = ceil(Nr/Nc)   # # of Records per Channel
-        SpR  = int(BpR/BpS)          # # of Samples per Record
+        RpC = ceil(Nr / Nc)  # # of Records per Channel
+        SpR = int(BpR / BpS)  # # of Samples per Record
 
         # Header object, for output
         Header = {}
-        Header['ID'] = ID
-        Header['Nr']  = Nr
-        Header['BpR']  = BpR
-        Header['Nc']  = Nc
-        Header['BpS'] = BpS
-        Header['tfReal'] = tfReal
-        Header['SpC']  = SpC
-        Header['RpC']  = RpC
-        Header['SpR']  = SpR
-        Header['fname'] = fname
-        Header['comment'] = comment
-        Header['bs']  = bs
-        Header['Description'] = """
+        Header["ID"] = ID
+        Header["Nr"] = Nr
+        Header["BpR"] = BpR
+        Header["Nc"] = Nc
+        Header["BpS"] = BpS
+        Header["tfReal"] = tfReal
+        Header["SpC"] = SpC
+        Header["RpC"] = RpC
+        Header["SpR"] = SpR
+        Header["fname"] = fname
+        Header["comment"] = comment
+        Header["bs"] = bs
+        Header[
+            "Description"
+        ] = """
                     ID= ID Number
                     Nr  = # of Records in File
                     BpR = # of Bytes per Record
@@ -187,84 +182,83 @@ def sioread(
                     bs  = Endian check value, should be 32677
                     """
 
-
         # if either channel or # of samples is 0, then return just header
-        if  (Ns == 0):
-            X	=	[]
+        if Ns == 0:
+            X = []
             return X, Header
 
         if (len(channels) == 1) and (channels[0] == -1):
-            X	=	[]
+            X = []
             return X, Header
 
-
         # Recheck parameters against header info
-        Ns_max = SpC - s_start + 1;
-        if	Ns == -1:
-            Ns	=	Ns_max			#	fetch all samples from start point
+        Ns_max = SpC - s_start + 1
+        if Ns == -1:
+            Ns = Ns_max  # 	fetch all samples from start point
         if Ns > Ns_max:
-            print('More samples requested than present in data file. Return max num samples:', Ns_max)
-            Ns	=	Ns_max
+            print(
+                "More samples requested than present in data file. Return max num samples:",
+                Ns_max,
+            )
+            Ns = Ns_max
 
         # Check validity of Channeli list
         if len(channels) == 0:
-            channels	=	list(range(Nc))	#	fetch all channels
-        if (len([x for x in channels if (x < 0) or (x > (Nc - 1))]) != 0):
-            raise ValueError('Channel #s must be within range 0 to ' + str(Nc - 1))
-
+            channels = list(range(Nc))  # 	fetch all channels
+        if len([x for x in channels if (x < 0) or (x > (Nc - 1))]) != 0:
+            raise ValueError("Channel #s must be within range 0 to " + str(Nc - 1))
 
         ## Read in file according to specified method
         # Calculate file offsets
         # Header is size of 1 Record at beginning of file
-        r_hoffset	=	1
+        r_hoffset = 1
         # Starting and total records needed from file
-        r_start	=int( floor((s_start-1)/SpR)*Nc + r_hoffset)
-        r_total	= int(ceil(Ns/SpR)*Nc)
+        r_start = int(floor((s_start - 1) / SpR) * Nc + r_hoffset)
+        r_total = int(ceil(Ns / SpR) * Nc)
 
         # Aggregate loading
-        if	inMem:
+        if inMem:
             # Move to starting location
-            f.seek( r_start*BpR)
+            f.seek(r_start * BpR)
 
             # Read in all records into single column
-            if dtype == 'f':
-                Data	=	unpack(endian + 'f'*r_total*SpR, f.read( r_total*SpR*4))
+            if dtype == "f":
+                Data = unpack(endian + "f" * r_total * SpR, f.read(r_total * SpR * 4))
             else:
-                Data	=	unpack(endian + 'h'*r_total*SpR, f.read( r_total*SpR*2))
+                Data = unpack(endian + "h" * r_total * SpR, f.read(r_total * SpR * 2))
             count = len(Data)
-            Data = np.array(Data) # cast to numpy array
-            if	count != r_total*SpR:
-                raise ValueError('Not enough samples read from file')
+            Data = np.array(Data)  # cast to numpy array
+            if count != r_total * SpR:
+                raise ValueError("Not enough samples read from file")
 
-            #	Reshape data into a matrix of records
-            Data	=	np.reshape(Data, (r_total, SpR)).T
+            # 	Reshape data into a matrix of records
+            Data = np.reshape(Data, (r_total, SpR)).T
 
-            #	Select each requested channel and stack associated records
-            m	=	int(r_total/Nc *SpR)
-            n	=	len(channels)
-            X	=	np.zeros((m,n))
-            for	i in range(len(channels)):
-                chan	=	channels[i]
-                blocks = np.arange(chan, r_total, Nc, dtype='int')
-                tmp	=	Data[:, blocks]
-                X[:,i]	=	tmp.T.reshape(m,1)[:,0]
+            # 	Select each requested channel and stack associated records
+            m = int(r_total / Nc * SpR)
+            n = len(channels)
+            X = np.zeros((m, n))
+            for i in range(len(channels)):
+                chan = channels[i]
+                blocks = np.arange(chan, r_total, Nc, dtype="int")
+                tmp = Data[:, blocks]
+                X[:, i] = tmp.T.reshape(m, 1)[:, 0]
 
             # Trim unneeded samples from start and end of matrix
-            trim_start	=	int((s_start-1)%SpR)
-            if	trim_start != 0:
-                X = X[trim_start:,:]
-            [m,tmp]	=	np.shape(X)
-            if	m > Ns:
-                X = X[:int(Ns), :]
-            if	m < Ns:
-                raise ValueError('Requested # of samples not returned. Check that s_start is multiple of rec_num: ' + str(SpR))
-
+            trim_start = int((s_start - 1) % SpR)
+            if trim_start != 0:
+                X = X[trim_start:, :]
+            [m, tmp] = np.shape(X)
+            if m > Ns:
+                X = X[: int(Ns), :]
+            if m < Ns:
+                raise ValueError(
+                    "Requested # of samples not returned. Check that s_start is multiple of rec_num: "
+                    + str(SpR)
+                )
 
         # Incremental loading
         else:
-            print('Not yet implemented incremental loading')
+            print("Not yet implemented incremental loading")
 
     return X, Header
-
-
-

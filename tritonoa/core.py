@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''This module contains objects common to the various ocean acoustics
+"""This module contains objects common to the various ocean acoustics
 models in Acoustics Toolbox software.
 
 William Jenkins
@@ -8,7 +8,7 @@ Scripps Institution of Oceanography
 wjenkins |a|t| ucsd |d|o|t| edu
 
 Licensed under GNU GPLv3; see LICENSE in repository for full text.
-'''
+"""
 
 from pathlib import Path
 import subprocess
@@ -17,7 +17,7 @@ import numpy as np
 
 
 class Array:
-    '''Specifies attributes of an acoustic array.
+    """Specifies attributes of an acoustic array.
 
     Attributes
     ----------
@@ -25,14 +25,12 @@ class Array:
         Vector containing depths of the array elements.
     nz : int
         Number of array elements.
-    '''
+    """
 
     def __init__(self, z: float):
         self.z = np.atleast_1d(z)
         self.nz = len(np.atleast_1d(z))
-    
 
-    # @staticmethod
     def equally_spaced(self):
         n = len(self.z)
         ztemp = np.linspace(self.z[0], self.z[-1], n)
@@ -44,7 +42,7 @@ class Array:
 
 
 class Source(Array):
-    '''Specifies attributes of acoustic source array.
+    """Specifies attributes of acoustic source array.
 
     Attributes
     ----------
@@ -52,14 +50,14 @@ class Source(Array):
         Vector containing depths of the array elements.
     nz : int
         Number of array elements.
-    '''
+    """
 
     def __init__(self, z: float):
         super().__init__(z)
 
 
 class Receiver(Array):
-    '''Specifies attributes of acoustic receiver array.
+    """Specifies attributes of acoustic receiver array.
 
     Attributes
     ----------
@@ -79,18 +77,18 @@ class Receiver(Array):
         Vector of receiver range offsets [m] to account for array tilt.
     n_offsets : int, default=1
         Length of vector of range offsets (r_offsets).
-    '''
+    """
 
     def __init__(
-            self,
-            z: float,
-            # r_max: float,
-            r: float,
-            # nr: int=None,
-            # dr: float=None,
-            # r_min: float=1e-3,
-            r_offsets: float=0
-        ):
+        self,
+        z: float,
+        # r_max: float,
+        r: float,
+        # nr: int=None,
+        # dr: float=None,
+        # r_min: float=1e-3,
+        r_offsets: float = 0,
+    ):
         super().__init__(z)
         self.r = np.atleast_1d(r)
         if self.r[0] == 0:
@@ -103,7 +101,7 @@ class Receiver(Array):
         # if r is not None:
         #     self.r = r
         #     self.nr = len(r)
-        #     self.r_max = 
+        #     self.r_max =
         # elif (nr is None) and (dr is not None):
         #     self.dr = dr / 1e3
         #     self.r = np.arange(self.r_min, self.r_max, self.dr)
@@ -120,7 +118,7 @@ class Receiver(Array):
 
 
 class SoundSpeedProfile:
-    def __init__(self, z, c_p, rho=1.0, c_s=0., a_p=0., a_s=0.):
+    def __init__(self, z, c_p, rho=1.0, c_s=0.0, a_p=0.0, a_s=0.0):
         self.z = np.atleast_1d(z)
         n = len(self.z)
         self.c_p = np.atleast_1d(c_p)
@@ -129,11 +127,13 @@ class SoundSpeedProfile:
         self.a_p = np.atleast_1d(a_p)
         self.a_s = np.atleast_1d(a_s)
 
-        if (n < len(self.c_p)) \
-            or (n < len(self.c_s)) \
-            or (n < len(self.rho)) \
-            or (n < len(self.a_p)) \
-            or (n < len(self.a_s)):
+        if (
+            (n < len(self.c_p))
+            or (n < len(self.c_s))
+            or (n < len(self.rho))
+            or (n < len(self.a_p))
+            or (n < len(self.a_s))
+        ):
             raise ValueError("Number of data points exceeds depth points.")
 
         if (n > 1) and (len(self.c_p) == 1):
@@ -169,15 +169,8 @@ class Halfspace:
 
 class Top(Halfspace):
     def __init__(
-            self,
-            opt="CVF    ",
-            z=None,
-            c_p=None,
-            c_s=0.,
-            rho=None,
-            a_p=0.,
-            a_s=0.
-        ):
+        self, opt="CVF    ", z=None, c_p=None, c_s=0.0, rho=None, a_p=0.0, a_s=0.0
+    ):
         super().__init__(opt, z, c_p, c_s, rho, a_p, a_s)
         if self.opt[1] == "A":
             if (z is None) or (c_p is None) or (rho is None):
@@ -186,24 +179,26 @@ class Top(Halfspace):
 
 class Bottom(Halfspace):
     def __init__(
-            self,
-            opt="R",
-            sigma=0.,
-            z=None,
-            c_p=None,
-            c_s=0.,
-            rho=None,
-            a_p=0.,
-            a_s=0.,
-            mz=None
-        ):
+        self,
+        opt="R",
+        sigma=0.0,
+        z=None,
+        c_p=None,
+        c_s=0.0,
+        rho=None,
+        a_p=0.0,
+        a_s=0.0,
+        mz=None,
+    ):
         super().__init__(opt, z, c_p, c_s, rho, a_p, a_s)
-        self.sigma = sigma # <-- Which sigma is this?  From one of the layers or its own?
+        self.sigma = (
+            sigma  # <-- Which sigma is this?  From one of the layers or its own?
+        )
 
         if self.opt[0] == "A":
             if (z is None) or (c_p is None) or (rho is None):
                 raise ValueError("Bottom halfspace properties undefined.")
-            
+
         elif self.opt[0] == "G":
             self.mz = mz
             if (z is None) or (mz is None):
@@ -222,15 +217,8 @@ class BioLayers:
 
 class ModelConfiguration:
     def __init__(
-            self,
-            title,
-            freq,
-            layers,
-            top,
-            bottom,
-            biolayers=None,
-            tmpdir=Path.cwd()
-        ):
+        self, title, freq, layers, top, bottom, biolayers=None, tmpdir=Path.cwd()
+    ):
         self.title = title
         self.freq = freq
         self.layers = layers
@@ -242,26 +230,24 @@ class ModelConfiguration:
             tmpdir = Path(tmpdir)
         self.tmpdir = tmpdir
         # if tmpdir is None:
-            # self.tmpdir = Path.cwd()
-    
+        # self.tmpdir = Path.cwd()
 
     def run_model(self, model):
         retcode = subprocess.call(
             f"{model}.exe {self.tmpdir / self.title}",
             shell=True,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
         )
         return retcode
-    
-    
+
     def _write_envfil(self):
-        envfil = self.tmpdir / f'{self.title}.env'
+        envfil = self.tmpdir / f"{self.title}.env"
         self.tmpdir.mkdir(parents=True, exist_ok=True)
-        with open(envfil, 'w') as f:
+        with open(envfil, "w") as f:
             # Block 1 - Title
             f.write(f"'{self.title}' ! Title \r\n")
-           # Block 2 - Frequency
+            # Block 2 - Frequency
             f.write(f"{self.freq:8.2f} \t \t \t ! Frequency (Hz) \r\n")
             # Block 3 - Number of Layers
             f.write(f"{self.nmedia:8d} \t \t \t ! NMEDIA \r\n")
@@ -270,13 +256,13 @@ class ModelConfiguration:
             # Block 4a - Top Halfspace Properties
             if self.top.opt[1] == "A":
                 f.write(
-                    f"     {self.layers[0].ssp.z[0]:6.2f}" + \
-                    f" {self.top.c_p:6.2f}" + \
-                    f" {self.top.c_s:6.2f}" + \
-                    f" {self.top.rho:6.2f}" + \
-                    f" {self.top.a_p:6.2f}" + \
-                    f" {self.top.a_s:6.2f}" + \
-                    "  \t ! Upper halfspace \r\n"
+                    f"     {self.layers[0].ssp.z[0]:6.2f}"
+                    + f" {self.top.c_p:6.2f}"
+                    + f" {self.top.c_s:6.2f}"
+                    + f" {self.top.rho:6.2f}"
+                    + f" {self.top.a_p:6.2f}"
+                    + f" {self.top.a_s:6.2f}"
+                    + "  \t ! Upper halfspace \r\n"
                 )
             # Block 4b - Biologic Layers (not implemented)
             if self.biolayers is not None:
@@ -284,41 +270,39 @@ class ModelConfiguration:
             # Block 5 - Sound Speed Profile
             for layer in self.layers:
                 f.write(
-                    f"{layer.nmesh:5d} " + \
-                    f"{layer.sigma:4.2f} " + \
-                    f"{layer.z_max:6.2f} " + \
-                    "\t ! N sigma max_layer_depth \r\n"
+                    f"{layer.nmesh:5d} "
+                    + f"{layer.sigma:4.2f} "
+                    + f"{layer.z_max:6.2f} "
+                    + "\t ! N sigma max_layer_depth \r\n"
                 )
                 for zz in range(len(layer.ssp.z)):
                     f.write(
-                        f"\t {layer.ssp.z[zz]:6.2f} " + \
-                        f"\t {layer.ssp.c_p[zz]:6.2f} " + \
-                        f"\t {layer.ssp.c_s[zz]:6.2f} " + \
-                        f"\t {layer.ssp.rho[zz]:6.2f} " + \
-                        f"\t {layer.ssp.a_p[zz]:6.2f} " + \
-                        f"\t {layer.ssp.a_s[zz]:6.2f} " + \
-                        "/ \t ! z cp cs rho ap as \r\n"
-                    )        
+                        f"\t {layer.ssp.z[zz]:6.2f} "
+                        + f"\t {layer.ssp.c_p[zz]:6.2f} "
+                        + f"\t {layer.ssp.c_s[zz]:6.2f} "
+                        + f"\t {layer.ssp.rho[zz]:6.2f} "
+                        + f"\t {layer.ssp.a_p[zz]:6.2f} "
+                        + f"\t {layer.ssp.a_s[zz]:6.2f} "
+                        + "/ \t ! z cp cs rho ap as \r\n"
+                    )
             # Block 6 - Bottom Option
             f.write(
-                f"'{self.bottom.opt}' {self.bottom.sigma:6.2f}" + \
-                "  \t \t ! Bottom Option, sigma\r\n"
+                f"'{self.bottom.opt}' {self.bottom.sigma:6.2f}"
+                + "  \t \t ! Bottom Option, sigma\r\n"
             )
             # Block 6a - Bottom Halfspace from Geoacoustic Parameters
             if self.bottom.opt[0] == "A":
                 f.write(
-                    f"     {self.bottom.z:6.2f}" + \
-                    f" {self.bottom.c_p:6.2f}" + \
-                    f" {self.bottom.c_s:6.2f}" + \
-                    f" {self.bottom.rho:6.2f}" + \
-                    f" {self.bottom.a_p:6.2f}" + \
-                    f" {self.bottom.a_s:6.2f}" + \
-                    "  \t ! Upper halfspace \r\n"
+                    f"     {self.bottom.z:6.2f}"
+                    + f" {self.bottom.c_p:6.2f}"
+                    + f" {self.bottom.c_s:6.2f}"
+                    + f" {self.bottom.rho:6.2f}"
+                    + f" {self.bottom.a_p:6.2f}"
+                    + f" {self.bottom.a_s:6.2f}"
+                    + "  \t ! Upper halfspace \r\n"
                 )
             # Block 6b - Bottom Halfspace from Grain Size
             elif self.bottom.opt[0] == "G":
-                f.write(
-                    f"   {self.bottom.z:6.2f} {self.bottom.mz:6.2f} ! zb mz\r\n"
-                )
-            
+                f.write(f"   {self.bottom.z:6.2f} {self.bottom.mz:6.2f} ! zb mz\r\n")
+
         return envfil

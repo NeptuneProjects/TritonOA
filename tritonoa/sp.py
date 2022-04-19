@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''This module contains commonly used signal processing functions for
+"""This module contains commonly used signal processing functions for
 ocean acoustics workflows.
 
 William Jenkins
@@ -8,7 +8,7 @@ Scripps Institution of Oceanography
 wjenkins |a|t| ucsd |d|o|t| edu
 
 Licensed under GNU GPLv3; see LICENSE in repository for full text.
-'''
+"""
 
 import numpy as np
 from scipy.special import hankel1
@@ -21,7 +21,7 @@ from scipy.special import hankel1
 #         self.object1 = object1
 #         self.object2 = object2
 #         self.space = space
-# 
+#
 #     def run(self):
 #         for param in self.space:
 #             pass
@@ -29,20 +29,20 @@ from scipy.special import hankel1
 
 
 def normalize_pressure(p, log=False):
-    '''Takes complex pressure and returns normalized pressure.
-    
+    """Takes complex pressure and returns normalized pressure.
+
     Parameters
     ----------
     p : array
         Array of complex pressure values.
     log : bool, default=False
         Scale normalized pressure logarithmically (e.g., for dB scale)
-    
+
     Returns
     -------
     pn : array
         Normalized pressure.
-    '''
+    """
 
     pn = np.abs(p)
     pn /= np.max(pn)
@@ -52,7 +52,7 @@ def normalize_pressure(p, log=False):
 
 
 def pressure_field(phi_src, phi_rec, k, r):
-    '''Calculates pressure field given range-independent vertical mode
+    """Calculates pressure field given range-independent vertical mode
     functions.
 
     Parameters
@@ -60,7 +60,7 @@ def pressure_field(phi_src, phi_rec, k, r):
     phi_src : array
         Complex-valued mode shape function at the source depth.
     phi_rec : array
-        Complex-valued mode shape function for specified depths (e.g., 
+        Complex-valued mode shape function for specified depths (e.g.,
         at receiver depths).
     k : array
         Complex-valued vertical wavenumber.
@@ -79,22 +79,22 @@ def pressure_field(phi_src, phi_rec, k, r):
     [1] Finn B. Jensen, William A. Kuperman, Michael B. Porter, and
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
-    '''
+    """
 
     p = (phi_src * phi_rec) @ hankel1(0, -k * r)
-    p = np.conj(np.pi * 1j / (1.) * p)
+    p = np.conj(np.pi * 1j / (1.0) * p)
     return p
 
 
 def bartlett(K, r_hat):
-    '''Returns Bartlett processor (e.g., for beamforming or matched
+    """Returns Bartlett processor (e.g., for beamforming or matched
     field processing).
 
     Parameters
     ----------
     K : array
         Covariance matrix of received complex pressure field.
-    
+
     r_hat : array
         Vector containing replica complex pressure field.
 
@@ -111,7 +111,7 @@ def bartlett(K, r_hat):
     [1] Finn B. Jensen, William A. Kuperman, Michael B. Porter, and
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
-    '''
+    """
 
     w = r_hat / np.linalg.norm(r_hat)
     B = abs(w.conj().T @ K @ w)
@@ -121,7 +121,7 @@ def bartlett(K, r_hat):
 # TODO: Build general purpose function for different beamformers.
 def ambiguity_function(K, r_hat, atype="bartlett"):
     w = r_hat / np.linalg.norm(r_hat)
-    
+
     if atype == "bartlett":
         B = w.conj().T @ K @ w
     elif atype == "MVDR":

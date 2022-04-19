@@ -3,6 +3,8 @@ William Jenkins<br>
 Scripps Institution of Oceanography<br>
 wjenkins |a|t| ucsd |d|o|t| edu<br>
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ## Overview
 This package contains Python utilities for interacting with the popular ocean 
 acoustics modeling software, [Acoustics Toolbox (AT)](https://oalib-acoustics.org/models-and-software/acoustics-toolbox/), 
