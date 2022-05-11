@@ -11,7 +11,6 @@ Licensed under GNU GPLv3; see LICENSE in repository for full text.
 """
 
 from math import ceil, floor
-from pathlib import Path
 from struct import unpack
 
 import numpy as np
