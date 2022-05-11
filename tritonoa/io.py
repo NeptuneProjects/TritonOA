@@ -95,7 +95,7 @@ def read_ssp(fname, zcol, ccol, header=None):
     mapper = {k: v for k, v in zip(list(df.columns), ["depth", "speed"])}
     df = df.rename(columns=mapper)
 
-    return df["depth"], df["speed"], df
+    return df["depth"].values, df["speed"].values, df
 
 
 def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
