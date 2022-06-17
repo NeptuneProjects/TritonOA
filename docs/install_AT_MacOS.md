@@ -1,7 +1,7 @@
 # Installing Acoustic Toolbox (AT) on macOS w/ Intel CPU
 William Jenkins
 <br>Scripps Institution of Oceanography
-<br>8 April 2022
+<br>16 June 2022
 
 ## Introduction
 Installing the Acoustic Toolbox (AT) software is nontrivial for basic and even intermediate computer users.  The source files are written in Fortran and require a Fortran compiler to build the binary executables.  macOS does not necessarily ship with the required compilers or libraries.  One approach is to install and use the [GNU Compiler Collection (GCC)](https://gcc.gnu.org), but I had frequent problems with missing libraries and compatibility issues.  Updating the OS often broke the installation of AT when compiled with GCC's GFortran compiler.  After many efforts at troubleshooting, I settled on using Intel's Fortran compiler.  The following steps will guide you through most of the steps required to install AT using **ifort**.
