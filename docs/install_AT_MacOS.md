@@ -85,7 +85,7 @@ Ensure MacOS command line tools (see 1.4) are on your computer's `LIBRARY_PATH`.
 Acoustic Toolbox programs can now be run from your Terminal (or from Python/MATLAB), but to do so, you must specify the path of the program in each call, or be in the same directory as the executable.  For example, to run the command in 4.4 from a separate working directory, you would need to run:
 <br>`<path to AT>/kraken/kraken.exe MunkK`
 <br>For those of us who run these programs often enough, that can be a bit of a hassle.  To be able to call AT programs from the command line without specifying the path to `AT`, follow these steps.
-1. Download the shell script `mk_sym_links.sh` available [here](https://github.com/NeptuneProjects/TritonOA/scripts).
+1. Download the shell script `mk_sym_links.sh` available [here](https://github.com/NeptuneProjects/TritonOA/tree/master/scripts).
 2. Open `mk_sym_links.sh` in a text editor.
 3. Set the `AT_PATH` environment variable to your installation of AT.
 4. Save and close the file.
@@ -93,6 +93,6 @@ Acoustic Toolbox programs can now be run from your Terminal (or from Python/MATL
 6. Run the command: `sh mk_sym_links.sh`.  You should now be able to run AT programs from any directory without specifying the path to AT.
 
 ## 6. Remove Symbolic Links
-1. If you need to reinstall or remove AT and wish to remove the symbolic links, download `rm_sym_links.sh` available [here](https://github.com/NeptuneProjects/TritonOA).
+1. If you need to reinstall or remove AT and wish to remove the symbolic links, download `rm_sym_links.sh` available [here](https://github.com/NeptuneProjects/TritonOA/tree/master/scripts).
 2. In Terminal, naviage to the same directory you saved `rm_sym_links.sh`.
 3. Run the command: `sh rm_sym_links.sh`.
