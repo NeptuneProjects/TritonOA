@@ -17,6 +17,7 @@ import numpy as np
 
 from tritonoa.core import (
     ModelConfiguration,
+    Parameterization,
     Layer,
     Source,
     SoundSpeedProfile,
@@ -43,6 +44,7 @@ class KRAKENModelConfiguration(ModelConfiguration):
         rprof=0.0,
         biolayers=None,
         tmpdir=Path.cwd(),
+        **kwargs
     ):
         super().__init__(title, freq, layers, top, bottom, biolayers, tmpdir)
         self.source = source
@@ -440,3 +442,22 @@ def run_kraken(parameters):
 
     # Return Complex Pressure at Receiver
     return kmodel.modes.p
+
+
+class KRAKENParameterization(Parameterization):
+    def __init__(self, parameters=None):
+        super().__init__(parameters)
+        if self.parameters is not None:
+            self.parse_KRAKEN_parameters()
+            self.modelconfig = KRAKENModelConfiguration(**self.__dict__)
+    
+    def run(self):
+        self.modelconfig.run(fldflag=True, model=self.model)
+        return self.modelconfig.modes.p
+        
+    def parse_KRAKEN_parameters(self):
+        self._parse_mode_parameters()
+    
+    def _parse_mode_parameters(self):
+        self.clow = self.parameters.get("clow", 1500.0)
+        self.chigh = self.parameters.get("chigh", 1600.0)

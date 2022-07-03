@@ -10,6 +10,8 @@ wjenkins |a|t| ucsd |d|o|t| edu
 Licensed under GNU GPLv3; see LICENSE in repository for full text.
 """
 
+from configparser import ConfigParser
+import json
 from pathlib import Path
 import subprocess
 
@@ -241,9 +243,12 @@ class ModelConfiguration:
         )
         return retcode
 
-    def _write_envfil(self):
-        envfil = self.tmpdir / f"{self.title}.env"
+    def _check_tmpdir(self):
         self.tmpdir.mkdir(parents=True, exist_ok=True)
+
+    def _write_envfil(self):
+        self._check_tmpdir()
+        envfil = self.tmpdir / f"{self.title}.env"
         with open(envfil, "w") as f:
             # Block 1 - Title
             f.write(f"'{self.title}' ! Title \r\n")
@@ -306,3 +311,95 @@ class ModelConfiguration:
                 f.write(f"   {self.bottom.z:6.2f} {self.bottom.mz:6.2f} ! zb mz\r\n")
 
         return envfil
+
+
+class Parameterization:
+    def __init__(self, parameters=None):
+        self.parameters = parameters
+        if self.parameters is not None:
+            self.parse_parameters()
+
+    def parse_parameters(self):
+        self._parse_misc_parameters()
+        self._parse_top_parameters()
+        self._parse_layer_parameters()
+        self._parse_bottom_parameters()
+        self._parse_source_parameters()
+        self._parse_receiver_parameters()
+        self._parse_freq_parameters()
+
+    def write_config(self, path=None):
+        if path is None:
+            path = self.tmpdir
+        else:
+            self._check_path(path)
+        self._write_json(path)
+        self._write_conf(path)
+
+    @staticmethod
+    def _check_path(path):
+        p = Path(path)
+        if not p.is_dir():
+            p.mkdir(parents=True, exist_ok=True)
+
+    def _parse_bottom_parameters(self):
+        self.bottom = Bottom(
+            opt=self.parameters.get("bot_opt", "A"),
+            sigma=self.parameters.get("bot_sigma", 0.0),
+            z=self.parameters.get("bot_z", self.layers[-1].z_max + 1),
+            c_p=self.parameters.get("bot_c_p"),
+            c_s=self.parameters.get("bot_c_s", 0.0),
+            rho=self.parameters.get("bot_rho"),
+            a_p=self.parameters.get("bot_a_p", 0.0),
+            a_s=self.parameters.get("bot_a_s", 0.0),
+            mz=self.parameters.get("bot_mz"),
+        )
+
+    def _parse_freq_parameters(self):
+        self.freq = self.parameters.get("freq", 100.0)
+
+    def _parse_layer_parameters(self):
+        self.layers = [
+            Layer(SoundSpeedProfile(**kwargs))
+            for kwargs in self.parameters.get("layerdata")
+        ]
+
+    def _parse_misc_parameters(self):
+        self.title = self.parameters.get("title", "Default")
+        self.tmpdir = self.parameters.get("tmpdir", "tmp")
+        if isinstance(self.tmpdir, str):
+            self.tmpdir = Path(self.tmpdir)
+        self.model = self.parameters.get("model")
+
+    def _parse_receiver_parameters(self):
+        self.receiver = Receiver(
+            z=self.parameters.get("rec_z"),
+            r=self.parameters.get("rec_r"),
+            r_offsets=self.parameters.get("rec_r_offsets", 0.0),
+        )
+
+    def _parse_source_parameters(self):
+        self.source = Source(z=self.parameters.get("src_z"))
+
+    def _parse_top_parameters(self):
+        self.top = Top(
+            opt=self.parameters.get("top_opt", "CVF    "),
+            z=self.parameters.get("top_z"),
+            c_p=self.parameters.get("top_c_p"),
+            c_s=self.parameters.get("top_c_s", 0.0),
+            rho=self.parameters.get("top_rho"),
+            a_p=self.parameters.get("top_a_p", 0.0),
+            a_s=self.parameters.get("top_a_s", 0.0),
+        )
+
+    def _write_conf(self, path):
+        config = ConfigParser()
+        config["PARAMETERS"] = self.parameters
+        with open(path / "config.txt", "w") as f:
+            config.write(f)
+
+    def _write_json(self, path):
+        print(type(path))
+        print(path)
+        with open(path / "config.json", "w") as f:
+            json.dump(self.parameters, f)
