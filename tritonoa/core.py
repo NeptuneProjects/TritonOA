@@ -11,7 +11,9 @@ Licensed under GNU GPLv3; see LICENSE in repository for full text.
 """
 
 from configparser import ConfigParser
+import contextlib
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -228,23 +230,30 @@ class ModelConfiguration:
         self.top = top
         self.bottom = bottom
         self.biolayers = biolayers
-        if isinstance(tmpdir, str):
-            tmpdir = Path(tmpdir)
-        self.tmpdir = tmpdir
-        # if tmpdir is None:
-        # self.tmpdir = Path.cwd()
+        self.tmpdir = enforce_path_type(tmpdir)
 
     def run_model(self, model):
-        retcode = subprocess.call(
-            f"{model}.exe {self.tmpdir / self.title}",
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        with self._working_directory(self.tmpdir):
+            retcode = subprocess.call(
+                f"{model}.exe {self.title}",
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         return retcode
 
     def _check_tmpdir(self):
         self.tmpdir.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    @contextlib.contextmanager
+    def _working_directory(path):
+        prev_cwd = Path.cwd()
+        os.chdir(path)
+        try:
+            yield
+        finally:
+            os.chdir(prev_cwd)
 
     def _write_envfil(self):
         self._check_tmpdir()
@@ -314,10 +323,32 @@ class ModelConfiguration:
 
 
 class Parameterization:
-    def __init__(self, parameters=None):
-        self.parameters = parameters
-        if self.parameters is not None:
+    def __init__(self, parameters=None, path=None):
+        if (parameters is not None) and (path is None):
+            self.parameters = parameters
             self.parse_parameters()
+        elif (parameters is None) and (path is not None):
+            self._load_config(path)
+            self.parse_parameters()
+        elif (parameters is None) and (path is None):
+            self.parameters = parameters
+        else:
+            raise ValueError(
+                "Variables 'parameters' and 'path' both set; only one accepted."
+            )
+
+    def _load_config(self, path):
+        config = dict()
+        if not isinstance(path, list):
+            path = [path]
+        [config.update(self._read_config(enforce_path_type(p))) for p in path]
+        self.parameters = config
+
+    @staticmethod
+    def _read_config(path):
+        with open(path, "r") as f:
+            config = json.load(f)
+        return config
 
     def parse_parameters(self):
         self._parse_misc_parameters()
@@ -328,13 +359,13 @@ class Parameterization:
         self._parse_receiver_parameters()
         self._parse_freq_parameters()
 
-    def write_config(self, path=None):
+    def write_config(self, path=None, fname="config"):
         if path is None:
             path = self.tmpdir
         else:
             self._check_path(path)
-        self._write_json(path)
-        self._write_conf(path)
+        self._write_json(path, fname)
+        self._write_conf(path, fname)
 
     @staticmethod
     def _check_path(path):
@@ -367,8 +398,7 @@ class Parameterization:
     def _parse_misc_parameters(self):
         self.title = self.parameters.get("title", "Default")
         self.tmpdir = self.parameters.get("tmpdir", "tmp")
-        if isinstance(self.tmpdir, str):
-            self.tmpdir = Path(self.tmpdir)
+        self.tmpdir = enforce_path_type(self.tmpdir)
         self.model = self.parameters.get("model")
 
     def _parse_receiver_parameters(self):
@@ -392,14 +422,18 @@ class Parameterization:
             a_s=self.parameters.get("top_a_s", 0.0),
         )
 
-    def _write_conf(self, path):
+    def _write_conf(self, path, fname):
         config = ConfigParser()
         config["PARAMETERS"] = self.parameters
-        with open(path / "config.txt", "w") as f:
+        with open(path / f"{fname}.ini", "w+") as f:
             config.write(f)
 
-    def _write_json(self, path):
-        print(type(path))
-        print(path)
-        with open(path / "config.json", "w") as f:
+    def _write_json(self, path, fname):
+        with open(path / f"{fname}.json", "w+") as f:
             json.dump(self.parameters, f)
+
+
+def enforce_path_type(path):
+    if isinstance(path, str):
+        path = Path(path)
+    return path
