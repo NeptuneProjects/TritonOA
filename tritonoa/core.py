@@ -234,6 +234,8 @@ class ModelConfiguration:
 
     def run_model(self, model):
         with self._working_directory(self.tmpdir):
+            print(f"{model}.exe {self.title}")
+            print(Path.cwd())
             retcode = subprocess.call(
                 f"{model}.exe {self.title}",
                 shell=True,
