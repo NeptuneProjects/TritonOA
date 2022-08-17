@@ -92,7 +92,7 @@ class KRAKENModelConfiguration(ModelConfiguration):
 
         return envfil
 
-    def run(self, model="krakenc", fldflag=False, verbose=False):
+    def run(self, model="kraken", fldflag=False, verbose=False):
         """Returns modes, pressure field, rvec, zvec"""
         if verbose:
             print(f"Running {model.upper()}")
