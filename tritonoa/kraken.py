@@ -373,7 +373,7 @@ def run_kraken(parameters):
     # Miscellaneous Parameters
     title = parameters.get("title", "Kraken")
     tmpdir = parameters.get("tmpdir", "tmp")
-    model = parameters.get("model", "KRAKENC")
+    model = parameters.get("model", "KRAKEN")
 
     # Top Parameters
     top = Top(
@@ -445,19 +445,19 @@ def run_kraken(parameters):
 
 
 class KRAKENParameterization(Parameterization):
-    def __init__(self, parameters=None):
-        super().__init__(parameters)
+    def __init__(self, parameters=None, path=None):
+        super().__init__(parameters, path)
         if self.parameters is not None:
             self.parse_KRAKEN_parameters()
             self.modelconfig = KRAKENModelConfiguration(**self.__dict__)
-    
+
     def run(self):
         self.modelconfig.run(fldflag=True, model=self.model)
         return self.modelconfig.modes.p
-        
+
     def parse_KRAKEN_parameters(self):
         self._parse_mode_parameters()
-    
+
     def _parse_mode_parameters(self):
         self.clow = self.parameters.get("clow", 1500.0)
         self.chigh = self.parameters.get("chigh", 1600.0)
