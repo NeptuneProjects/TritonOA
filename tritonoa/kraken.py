@@ -99,6 +99,7 @@ class KRAKENModelConfiguration(ModelConfiguration):
         _ = self._write_envfil_KRAKEN()
         self.run_model(model=model)
         self.modes = Modes(self.freq, self.source, self.receiver)
+        print(self.tmpdir / self.title)
         self.modes.read_modes(self.tmpdir / self.title)
         if fldflag:
             _ = self.modes.field()
