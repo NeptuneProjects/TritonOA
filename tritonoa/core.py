@@ -255,6 +255,7 @@ class ModelConfiguration:
             yield
         finally:
             os.chdir(prev_cwd)
+            print(prev_cwd)
 
     def _write_envfil(self):
         self._check_tmpdir()
