@@ -237,7 +237,7 @@ class ModelConfiguration:
             print(f"{model}.exe {self.title}")
             print(Path.cwd())
             retcode = subprocess.call(
-                f"{model}.exe {self.title}",
+                f"{model.lower()}.exe {self.title}",
                 shell=True,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
