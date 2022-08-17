@@ -81,12 +81,12 @@ def pressure_field(phi_src, phi_rec, k, r):
     Springer Publishing Company, Incorporated.
     """
 
-    p = (phi_src * phi_rec) @ hankel1(0, -k * r)
+    p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
     p = np.conj(np.pi * 1j / (1.0) * p)
     return p
 
 
-def bartlett(K, r_hat):
+def bf_cbf(K, w):
     """Returns Bartlett processor (e.g., for beamforming or matched
     field processing).
 
@@ -100,7 +100,7 @@ def bartlett(K, r_hat):
 
     Returns
     -------
-    B : array
+    array
         Output of the Bartlett processor.
 
     Notes
@@ -113,21 +113,98 @@ def bartlett(K, r_hat):
     Springer Publishing Company, Incorporated.
     """
 
+    return w.conj().T.dot(K).dot(w)
+
+
+def bf_mvdr(K, w):
+    """Returns MVDR processor (e.g., for beamforming or matched
+    field processing).
+
+    Parameters
+    ----------
+    K : array
+        Covariance matrix of received complex pressure field.
+
+    r_hat : array
+        Vector containing replica complex pressure field.
+
+    Returns
+    -------
+    array
+        Output of the Bartlett processor.
+
+    Notes
+    -----
+    This function implements equation 10.21 from [1], with K defined by
+    equation 10.20 and w defined by equation 10.61.
+
+    [1] Finn B. Jensen, William A. Kuperman, Michael B. Porter, and
+    Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
+    Springer Publishing Company, Incorporated.
+    """
+    return 1 / (w.conj().T.dot(np.linalg.inv(K)).dot(w))
+
+
+def bf_music(K, w, num_src=1):
+    _, V = np.linalg.eig(K)
+    V = V[:, 0:-num_src]
+    return 1 / (w.conj().T.dot(V).dot(V.conj().T).dot(w))
+
+
+def bf_eigen(K, w, num_src=1):
+    d, V = np.linalg.eig(K)
+
+
+def beamformer(K, r_hat, atype="cbf", num_src=1, abs_value=True):
+    K = (K + K.conj().T) / 2  # Enforce Hermitian
     w = r_hat / np.linalg.norm(r_hat)
-    B = abs(w.conj().T @ K @ w)
-    return B
+
+    if atype == "cbf":
+        B = bf_cbf(K, w)
+    elif atype == "mvdr":
+        B = bf_mvdr(K, w)
+    elif atype == "music":
+        B = bf_music(K, w, num_src)
+    elif atype == "eigen":
+        B = bf_eigen(K, w, num_src)
+    else:
+        raise TypeError("Beamformer 'atype' not implemented.")
+
+    if abs_value:
+        return abs(B)
+    else:
+        return B
 
 
-# TODO: Build general purpose function for different beamformers.
-def ambiguity_function(K, r_hat, atype="bartlett"):
-    w = r_hat / np.linalg.norm(r_hat)
+def snrdb_to_sigma(snrdb, sig_ampl=1.0):
+    """Returns the standard deviation of white Gaussian noise given SNR (dB) and
+    number of elements in an array.
 
-    if atype == "bartlett":
-        B = w.conj().T @ K @ w
-    elif atype == "MVDR":
-        B = (w.conj().T @ np.linalg.inv(K) @ w) ** -1
-    elif atype == "MCM":
-        B = None
-    elif atype == "WNC":
-        B = None
-    return abs(B)
+    Parameters
+    ----------
+    snrdb : float
+        SNR level [dB]
+    sig_ampl : float
+        Amplitude of the signal of interest.
+
+    Returns
+    -------
+    float
+        Standard deviation (sigma) of the noise.
+    """
+    return 10 ** (-snrdb / 20) * sig_ampl
+
+
+def added_wng(size, sigma=1.0, cmplx=False, seed=None):
+    if seed is None:
+        rng = np.random
+    else:
+        rng = np.random.default_rng(seed)
+
+    if cmplx:
+        return np.vectorize(complex)(
+            rng.normal(0, sigma, size) / np.sqrt(2),
+            rng.normal(0, sigma, size) / np.sqrt(2),
+        )
+    else:
+        return rng.normal(0, sigma, size)
