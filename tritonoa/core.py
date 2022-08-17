@@ -250,6 +250,7 @@ class ModelConfiguration:
     def _working_directory(path):
         prev_cwd = Path.cwd()
         os.chdir(path)
+        print(path)
         try:
             yield
         finally:
