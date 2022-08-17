@@ -250,12 +250,10 @@ class ModelConfiguration:
     def _working_directory(path):
         prev_cwd = Path.cwd()
         os.chdir(path)
-        print(path)
         try:
             yield
         finally:
             os.chdir(prev_cwd)
-            print(prev_cwd)
 
     def _write_envfil(self):
         self._check_tmpdir()
