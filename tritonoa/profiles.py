@@ -51,7 +51,7 @@ class SoundSpeedFunctions:
         elif model == "UNESCO":
             return SoundSpeedFunctions.sos_UNESCO(Z, S, T, latitude)
 
-    @classmethod
+    @staticmethod
     def sos_Coppens(Z, S, T):
         """Speed of sound in sea-water as a function of temperature,
         salinity and depth is given by Coppens equation [1].
@@ -89,14 +89,14 @@ class SoundSpeedFunctions:
             )
             return c0ST
 
-        T /= 10
-        Z /= 1e3
+        T_ = T / 10
+        Z_ = Z / 1e3
 
         return (
-            _c0ST(S, T)
-            + (16.23 + 0.253 * T) * Z
-            + (0.213 - 0.1 * T) * Z**2
-            + (0.016 + 0.0002 * (S - 35)) * (S - 35) * T * Z
+            _c0ST(S, T_)
+            + (16.23 + 0.253 * T_) * Z_
+            + (0.213 - 0.1 * T_) * Z_**2
+            + (0.016 + 0.0002 * (S - 35)) * (S - 35) * T_ * Z_
         )
 
     @staticmethod
