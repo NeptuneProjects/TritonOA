@@ -80,7 +80,17 @@ def pressure_field(phi_src, phi_rec, k, r):
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
-
+    debugmsg = (
+        f"phi_src = {phi_src}\n"
+        f"shape: {phi_src.shape}\n"
+        f"phi_rec = {phi_rec}\n"
+        f"shape: {phi_rec.shape}\n"
+        f"k = {k}\n"
+        f"shape: {k.shape}\n"
+        f"r = {r}\n"
+        f"shape: {r.shape}\n"
+    )
+    print(debugmsg)
     p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
     p = np.conj(np.pi * 1j / (1.0) * p)
     return p
