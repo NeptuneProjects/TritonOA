@@ -44,7 +44,7 @@ class KRAKENModelConfiguration(ModelConfiguration):
         rprof=0.0,
         biolayers=None,
         tmpdir=Path.cwd(),
-        **kwargs
+        **kwargs,
     ):
         super().__init__(title, freq, layers, top, bottom, biolayers, tmpdir)
         self.source = source
@@ -314,7 +314,9 @@ class Modes:
 
         self.title = title
         self.M = M
-        self.z = np.around(np.array(z), 4) # Rounded to 3rd decimal; source depth 
+        self.z = np.around(
+            np.array(z), 4
+        )  # Rounded to 3rd decimal; source depth is sometimes returned with low precision
         self.k = modes_k
         self.phi = modes_phi
         self.top = top
@@ -329,7 +331,7 @@ class Modes:
         self._format_modes()
         return self.modfil
 
-    # TODO: Need to test this more robustly.
+    # This function is sensitive to floating point errors between the source depth as given to KRAKEN and the source depth as read from the binary MODFIL.
     def _format_modes(self):
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
