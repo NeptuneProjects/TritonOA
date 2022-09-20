@@ -334,13 +334,10 @@ class Modes:
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         mask = np.isclose(self.source.z, self.z, rtol=1e-8, atol=1e-8)
-        print(mask)
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
-            print("The source depth is the same as a receiver depth.")
             phi_rec = phi
         else:
-            print("The source depth is different than all receiver depths.")
             phi_rec = phi[np.invert(mask), :]
         self.phi_src = phi_src
         self.phi_rec = phi_rec
