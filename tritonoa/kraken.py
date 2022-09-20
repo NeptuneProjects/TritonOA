@@ -314,7 +314,7 @@ class Modes:
 
         self.title = title
         self.M = M
-        self.z = np.array(z)
+        self.z = np.around(np.array(z), 3)
         self.k = modes_k
         self.phi = modes_phi
         self.top = top
@@ -333,7 +333,7 @@ class Modes:
     def _format_modes(self):
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
-        mask = np.isclose(self.source.z, self.z, rtol=1e-8, atol=1e-8)
+        mask = np.isclose(np.around(self.source.z, 3), self.z)
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
             phi_rec = phi
