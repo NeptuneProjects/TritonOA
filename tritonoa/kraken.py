@@ -314,7 +314,7 @@ class Modes:
 
         self.title = title
         self.M = M
-        self.z = np.around(np.array(z), 3) # Rounded to 3rd decimal; source depth 
+        self.z = np.around(np.array(z), 5) # Rounded to 3rd decimal; source depth 
         self.k = modes_k
         self.phi = modes_phi
         self.top = top
@@ -334,7 +334,7 @@ class Modes:
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         # mask = np.isclose(np.around(self.source.z, 3), self.z)
-        mask = np.around(self.source.z, 3) == self.z
+        mask = np.around(self.source.z, 5) == self.z
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
             phi_rec = phi
