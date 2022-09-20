@@ -96,6 +96,7 @@ def pressure_field(phi_src, phi_rec, k, r):
     # print(phi_rec.shape, phi_rec)
     # print((phi_src * phi_rec).shape)
     # print(hankel1(0, -k * r).shape)
+    print(phi_src.shape, phi_rec.shape, k.shape, r.shape)
     p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
     p = np.conj(np.pi * 1j / (1.0) * p)
     return p
