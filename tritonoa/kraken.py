@@ -334,6 +334,7 @@ class Modes:
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         mask = np.isclose(self.source.z, self.z)
+        print(mask)
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
             print("The source depth is the same as a receiver depth.")
