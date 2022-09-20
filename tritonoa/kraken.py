@@ -329,14 +329,17 @@ class Modes:
         self._format_modes()
         return self.modfil
 
+    # TODO: Need to test this more robustly.
     def _format_modes(self):
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         mask = np.isclose(self.source.z, self.z)
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
+            print("The source depth is the same as a receiver depth.")
             phi_rec = phi
         else:
+            print("The source depth is different than all receiver depths.")
             phi_rec = phi[np.invert(mask), :]
         self.phi_src = phi_src
         self.phi_rec = phi_rec
