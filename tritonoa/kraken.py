@@ -335,8 +335,11 @@ class Modes:
     def _format_modes(self):
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
+        ind = np.argmin(abs(self.source.z - self.z))
+        mask = np.zeros_like(self.z, dtype=bool)
+        mask[ind] = True
         # mask = np.isclose(np.around(self.source.z, 3), self.z)
-        mask = np.around(self.source.z, 4) == self.z
+        # mask = np.around(self.source.z, 4) == self.z
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
             phi_rec = phi
