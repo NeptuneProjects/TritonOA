@@ -314,9 +314,7 @@ class Modes:
 
         self.title = title
         self.M = M
-        self.z = np.around(
-            np.array(z), 4
-        )  # Rounded to 3rd decimal; source depth is sometimes returned with low precision
+        self.z = np.array(z)
         self.k = modes_k
         self.phi = modes_phi
         self.top = top
@@ -331,15 +329,12 @@ class Modes:
         self._format_modes()
         return self.modfil
 
-    # This function is sensitive to floating point errors between the source depth as given to KRAKEN and the source depth as read from the binary MODFIL.
     def _format_modes(self):
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         ind = np.argmin(abs(self.source.z - self.z))
         mask = np.zeros_like(self.z, dtype=bool)
         mask[ind] = True
-        # mask = np.isclose(np.around(self.source.z, 3), self.z)
-        # mask = np.around(self.source.z, 4) == self.z
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
             phi_rec = phi
