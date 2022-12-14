@@ -334,9 +334,9 @@ class Modes:
         phi = self.phi
         ind = np.argmin(abs(self.source.z - self.z))
         print(f"ind = {ind}")
-        print(f"z_src = \n{self.source.z}")
+        print(f"zsrc = {self.source.z}")
         print(len(self.source.z))
-        print(f"z = \nz={self.z}")
+        print(f"z = \n{self.z}")
         print(len(self.z))
         mask = np.zeros_like(self.z, dtype=bool)
         mask[ind] = True
