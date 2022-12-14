@@ -336,6 +336,7 @@ class Modes:
         print(f"ind = {ind}, z_src={self.source.z}, z={self.z}\n")
         mask = np.zeros_like(self.z, dtype=bool)
         mask[ind] = True
+        print(mask)
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
             phi_rec = phi
