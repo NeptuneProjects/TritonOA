@@ -343,7 +343,7 @@ class Modes:
         print(mask)
         print(len(mask))
         phi_src = phi[mask, :]
-        if np.around(self.source.z, 3) in np.around(self.receiver.z, 3):
+        if self.source.z in self.receiver.z:
             phi_rec = phi
         else:
             phi_rec = phi[np.invert(mask), :]
