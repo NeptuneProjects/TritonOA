@@ -333,7 +333,7 @@ class Modes:
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         ind = np.argmin(abs(self.source.z - self.z))
-        print(ind)
+        print(f"ind = {ind}\n")
         mask = np.zeros_like(self.z, dtype=bool)
         mask[ind] = True
         phi_src = phi[mask, :]
