@@ -32,7 +32,7 @@ class Array:
     """
 
     def __init__(self, z: float):
-        self.z = np.atleast_1d(z)
+        self.z = np.atleast_1d(np.around(z, 3))
         self.nz = len(np.atleast_1d(z))
 
     def equally_spaced(self):
