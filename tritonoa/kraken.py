@@ -333,15 +333,8 @@ class Modes:
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         ind = np.argmin(abs(self.source.z - self.z))
-        print(f"ind = {ind}")
-        print(f"zsrc = {self.source.z}")
-        print(len(self.source.z))
-        print(f"z = \n{self.z}")
-        print(len(self.z))
         mask = np.zeros_like(self.z, dtype=bool)
         mask[ind] = True
-        print(mask)
-        print(len(mask))
         phi_src = phi[mask, :]
         if self.source.z in self.receiver.z:
             phi_rec = phi
