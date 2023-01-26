@@ -12,6 +12,7 @@ Licensed under GNU GPLv3; see LICENSE in repository for full text.
 
 from pathlib import Path
 from struct import unpack
+from typing import Union
 
 import numpy as np
 
@@ -463,3 +464,10 @@ class KRAKENParameterization(Parameterization):
     def _parse_mode_parameters(self):
         self.clow = self.parameters.get("clow", 1500.0)
         self.chigh = self.parameters.get("chigh", 1600.0)
+
+
+def clean_up_kraken_files(path: Union[Path, str]):
+    if isinstance(path, str):
+        path = Path(path)
+    extensions = ["env", "mod", "prt"]
+    [[f.unlink() for f in path.glob(f"*.{ext}")] for ext in extensions]
