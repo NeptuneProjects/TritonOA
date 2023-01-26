@@ -300,3 +300,9 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
             print("Not yet implemented incremental loading")
 
     return X, Header
+
+
+def convert_sio_to_npy(source, destination):
+    for f in source:
+        X, header = sioread(f)
+        np.savez(destination / f.name, X, header)
