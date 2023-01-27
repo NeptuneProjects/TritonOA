@@ -10,54 +10,81 @@ wjenkins |a|t| ucsd |d|o|t| edu
 Licensed under GNU GPLv3; see LICENSE in repository for full text.
 """
 
+import datetime
 from math import ceil, floor
+from pathlib import Path
 from struct import unpack
 
 import numpy as np
 import pandas as pd
 
 
-# class SioStream:
-#     """
-#     Written by Hunter Akins, 4 June 2019
-#     data object implementing indexing and return sequential data
-#     Indexing starts out 0, but sioread indexes at 1, so I need to add 1 to all keys
-#     """
-#     def __init__(self, fname):
-#         s_start, Ns = 1, 1
-#         inp = {'fname': fname, 's_start': s_start, 'Ns':Ns}
-#         [tmp, hdr] = sioread(**inp)
-#         # use header to get Nc and samples per channel
-#         self.Nc = hdr['Nc']
-#         self.SpC = hdr['SpC']
-#         self.SpR = hdr['SpR']
-#         self.inp = inp
+class SIODataHandler:
+    def __init__(self, files: list):
+        self.files = sorted(files)
 
-#     def __getitem__(self, key):
-#         if isinstance(key, slice):
-#             if key.step is None:
-#                 step = 1
-#             else:
-#                 step = key.step
-#             start = key.start
-#             resid = start % self.SpR
-#             if resid != 0:
-#                 start -= resid
-#                 self.inp['s_start'] = start+1
-#                 if key.stop is None:
-#                     self.inp['Ns'] = 1
-#                 else:
-#                     self.inp['Ns'] = key.stop - key.start + resid
-#                 [tmp, hdr] = sioread(**self.inp)
-#                 tmp = tmp[resid:] # truncate the unnecessary read at beg.
-#                 return tmp
-#         self.inp['s_start'] = key.start+1
-#         if key.stop is None:
-#             self.inp['Ns'] = 1
-#         else:
-#             self.inp['Ns'] = key.stop - key.start
-#         [tmp, hdr] = sioread(**self.inp)
-#         return tmp
+    @staticmethod
+    def load_merged(fname):
+        data = np.load(fname)
+        return data["X"], data["t"]
+
+    def to_numpy(self, channels_to_remove=-1, destination=None):
+        for f in self.files:
+            data, header = sioread(f)
+            if channels_to_remove is not None:
+                data = np.delete(data, np.s_[channels_to_remove], axis=1)
+
+            if destination is not None:
+                if isinstance(destination, str):
+                    destination = Path(destination)
+                f = destination / f.name
+
+            np.save(f, data)
+            np.save(f.parent / (f.name + "_header"), header)
+
+    # Merge data according to datetimes
+    def merge(
+        self, base_time, start, end, fs, channels_to_remove=None, destination=None
+    ):
+        # Load data from files
+        data = []
+        for f in self.files:
+            data.append(np.load(f))
+
+        data = np.concatenate(data)
+        if channels_to_remove is not None:
+            data = np.delete(data, np.s_[channels_to_remove], axis=1)
+
+        # Define time vector [s]
+        t = np.linspace(0, (data.shape[0] - 1) / fs, data.shape[0])
+        # Specify starting file datetime
+        base_time = datetime.datetime.strptime(base_time, "%y%j %H:%M")
+        # Specify analysis starting datetime
+        start = datetime.datetime.strptime(start, "%y%j %H:%M")
+        # Specify analysis ending datetime
+        end = datetime.datetime.strptime(end, "%y%j %H:%M")
+        # Create datetime vector
+        dt = np.array([base_time + datetime.timedelta(seconds=i) for i in t])
+        # Find indeces of analysis data
+        idx = (dt >= start) & (dt < end)
+        # Remove extraneous data
+        data = data[idx]
+        t = t[idx]
+        # Save to file
+        if destination is not None:
+            if isinstance(destination, str):
+                destination = Path(destination)
+            np.savez(destination, X=data, t=t)
+        else:
+            np.savez("merged.npz", X=data, t=t)
+
+        return data, t
+
+
+def convert_sio_to_npy(source, destination):
+    for f in source:
+        X, header = sioread(f)
+        np.savez(destination / f.name, X, header)
 
 
 def read_ssp(fname, zcol, ccol, header=None):
@@ -302,7 +329,45 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
     return X, Header
 
 
-def convert_sio_to_npy(source, destination):
-    for f in source:
-        X, header = sioread(f)
-        np.savez(destination / f.name, X, header)
+# class SioStream_:
+#     """
+#     Written by Hunter Akins, 4 June 2019
+#     data object implementing indexing and return sequential data
+#     Indexing starts out 0, but sioread indexes at 1, so I need to add 1 to all keys
+#     """
+
+#     def __init__(self, fname):
+#         s_start, Ns = 1, 1
+#         inp = {"fname": fname, "s_start": s_start, "Ns": Ns}
+#         [tmp, hdr] = sioread(**inp)
+#         # use header to get Nc and samples per channel
+#         self.Nc = hdr["Nc"]
+#         self.SpC = hdr["SpC"]
+#         self.SpR = hdr["SpR"]
+#         self.inp = inp
+
+#     def __getitem__(self, key):
+#         if isinstance(key, slice):
+#             if key.step is None:
+#                 step = 1
+#             else:
+#                 step = key.step
+#             start = key.start
+#             resid = start % self.SpR
+#             if resid != 0:
+#                 start -= resid
+#                 self.inp["s_start"] = start + 1
+#                 if key.stop is None:
+#                     self.inp["Ns"] = 1
+#                 else:
+#                     self.inp["Ns"] = key.stop - key.start + resid
+#                 [tmp, hdr] = sioread(**self.inp)
+#                 tmp = tmp[resid:]  # truncate the unnecessary read at beg.
+#                 return tmp
+#         self.inp["s_start"] = key.start + 1
+#         if key.stop is None:
+#             self.inp["Ns"] = 1
+#         else:
+#             self.inp["Ns"] = key.stop - key.start
+#         [tmp, hdr] = sioread(**self.inp)
+#         return tmp
