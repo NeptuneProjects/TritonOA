@@ -377,7 +377,7 @@ class Parameterization:
         self.bottom = Bottom(
             opt=self.parameters.get("bot_opt", "A"),
             sigma=self.parameters.get("bot_sigma", 0.0),
-            z=self.parameters.get("bot_z", self.layers[-1].z_max),
+            z=self.parameters.get("bot_z", self.layers[-1].z_max), # TODO: Investigate default behavior
             c_p=self.parameters.get("bot_c_p"),
             c_s=self.parameters.get("bot_c_s", 0.0),
             rho=self.parameters.get("bot_rho"),
