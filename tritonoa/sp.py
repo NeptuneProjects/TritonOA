@@ -74,14 +74,16 @@ def pressure_field(phi_src, phi_rec, k, r):
 
     Notes
     -----
-    This function implements equation 5.13 from [1].
+    This function implements equation 5.13 from [1]. NOTE: This implementation
+    is in contrast to the KRAKEN MATLAB implementation, which normalizes the 
+    output by a factor of (1 / (4 * pi)).
 
     [1] Finn B. Jensen, William A. Kuperman, Michael B. Porter, and
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
     p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
-    p = np.conj(np.pi * 1j / (1.0) * p)
+    p = np.conj(1j / (4 * 1.0) * p)
     return p
 
 
