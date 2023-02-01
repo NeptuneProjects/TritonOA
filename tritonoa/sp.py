@@ -82,8 +82,17 @@ def pressure_field(phi_src, phi_rec, k, r):
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
-    p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
-    p = np.conj(1j / (4 * 1.0) * p)
+    hankel = np.exp(-1j * r * k) / np.sqrt(k.real * r)
+    p = (phi_src * phi_rec).dot(hankel)
+    p *= np.exp(1j * np.pi / 4)
+    p /= np.sqrt(8 * np.pi)
+
+    # p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
+    # p = (phi_src * phi_rec).dot(hankel1(0, k.conj() * r))
+    # TODO: Replace hankel1 with asymptotic form
+    
+    # print(k)
+    # p = np.conj(1j / (4 * 1.0) * p)
     return p
 
 
@@ -96,7 +105,7 @@ def bf_cbf(K, w):
     K : array
         Covariance matrix of received complex pressure field.
 
-    r_hat : array
+    w : array
         Vector containing replica complex pressure field.
 
     Returns
