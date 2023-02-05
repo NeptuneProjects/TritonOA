@@ -77,19 +77,13 @@ class Receiver(Array):
         Minimum range [km] of receiver range vector.
     nr : int, default=None
         Number of elements in receiver range vector.
+    tilt : float, default=None
+        Array tilt [deg].
     r_offsets : array, default=0
         Vector of receiver range offsets [m] to account for array tilt.
-    n_offsets : int, default=1
-        Length of vector of range offsets (r_offsets).
     """
 
-    def __init__(
-        self,
-        z: float,
-        r: float,
-        tilt=None,
-        r_offsets: float = 0,
-    ):
+    def __init__(self, z: float, r: float, tilt=None, r_offsets=None):
         super().__init__(z)
         self.r = np.atleast_1d(r)
         if self.r[0] == 0:
@@ -97,12 +91,15 @@ class Receiver(Array):
         self.r_min = np.min(self.r)
         self.r_max = np.max(self.r)
         self.nr = len(self.r)
-        if tilt is not None:
-            self.r_offsets = (self.z.max() - self.z) * np.sin(tilt * np.pi / 180)
-            self.n_offsets = len(np.atleast_1d(r_offsets))
-        
-        # self.r_offsets = r_offsets
-        
+        self.r_offsets = (
+            r_offsets
+            if tilt is None
+            else np.atleast_2d(self.array_tilt(self.z, tilt)).T
+        )
+
+    @staticmethod
+    def array_tilt(z, tilt):
+        return (z.max() - z) * np.sin(tilt * np.pi / 180)
 
 
 class SoundSpeedProfile:
@@ -361,7 +358,9 @@ class Parameterization:
         self.bottom = Bottom(
             opt=self.parameters.get("bot_opt", "A"),
             sigma=self.parameters.get("bot_sigma", 0.0),
-            z=self.parameters.get("bot_z", self.layers[-1].z_max), # TODO: Investigate default behavior
+            z=self.parameters.get(
+                "bot_z", self.layers[-1].z_max
+            ),  # TODO: Investigate default behavior
             c_p=self.parameters.get("bot_c_p"),
             c_s=self.parameters.get("bot_c_s", 0.0),
             rho=self.parameters.get("bot_rho"),

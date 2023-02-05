@@ -346,7 +346,11 @@ class Modes:
 
     def field(self):
         self.p = pressure_field(
-            self.phi_src, self.phi_rec, self.k, self.receiver.r * 1000
+            self.phi_src,
+            self.phi_rec,
+            self.k,
+            self.receiver.r * 1000,
+            self.receiver.r_offsets,
         )
         return self.p
 

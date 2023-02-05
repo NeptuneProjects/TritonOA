@@ -51,7 +51,7 @@ def normalize_pressure(p, log=False):
     return pn
 
 
-def pressure_field(phi_src, phi_rec, k, r):
+def pressure_field(phi_src, phi_rec, k, r, r_offsets=None):
     """Calculates pressure field given range-independent vertical mode
     functions.
 
@@ -82,10 +82,21 @@ def pressure_field(phi_src, phi_rec, k, r):
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
-    hankel = np.exp(-1j * k * r) / np.sqrt(k.real * r)
-    p = (phi_src * phi_rec).dot(hankel)
-    p *= 1j * np.exp(-1j * np.pi / 4)
-    p /= np.sqrt(8 * np.pi * r)
+    if r_offsets is not None:
+        M = phi_rec.shape[0]
+        N = len(r)
+        p = np.zeros((M, N), dtype=complex)
+        for zz in range(M):
+            hankel = hankel1(0, -k * (r + r_offsets[zz]))
+            p[zz] = (phi_src * phi_rec[zz]).dot(hankel)
+    else:
+        p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
+    p = (1j / 4) * p
+
+    # hankel = np.exp(-1j * k * r) / np.sqrt(k.real * r)
+    # p = (phi_src * phi_rec).dot(hankel)
+    # p *= 1j * np.exp(-1j * np.pi / 4)
+    # p /= np.sqrt(8 * np.pi * r)
 
     # p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
     # p = (phi_src * phi_rec).dot(hankel1(0, k.conj() * r))
