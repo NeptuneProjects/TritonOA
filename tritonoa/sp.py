@@ -82,10 +82,10 @@ def pressure_field(phi_src, phi_rec, k, r):
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
-    hankel = np.exp(-1j * r * k) / np.sqrt(k.real * r)
+    hankel = np.exp(-1j * k * r) / np.sqrt(k.real * r)
     p = (phi_src * phi_rec).dot(hankel)
-    p *= np.exp(1j * np.pi / 4)
-    p /= np.sqrt(8 * np.pi)
+    p *= 1j * np.exp(-1j * np.pi / 4)
+    p /= np.sqrt(8 * np.pi * r)
 
     # p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
     # p = (phi_src * phi_rec).dot(hankel1(0, k.conj() * r))
