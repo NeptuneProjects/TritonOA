@@ -418,7 +418,8 @@ def run_kraken(parameters):
         # nr=parameters.get("rec_nr"),
         # dr=parameters.get("rec_dr"),
         # r_min=parameters.get("rec_r_min", 1.e-3),
-        r_offsets=parameters.get("rec_r_offsets", 0.0),
+        tilt=parameters.get("tilt", None)
+        # r_offsets=parameters.get("rec_r_offsets", 0.0),
     )
 
     # Freq/Mode Parameters
