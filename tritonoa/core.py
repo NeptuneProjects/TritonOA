@@ -86,11 +86,8 @@ class Receiver(Array):
     def __init__(
         self,
         z: float,
-        # r_max: float,
         r: float,
-        # nr: int=None,
-        # dr: float=None,
-        # r_min: float=1e-3,
+        tilt=None,
         r_offsets: float = 0,
     ):
         super().__init__(z)
@@ -100,25 +97,12 @@ class Receiver(Array):
         self.r_min = np.min(self.r)
         self.r_max = np.max(self.r)
         self.nr = len(self.r)
-        # self.r_min = r_min
-        # self.r_max = r_max
-        # if r is not None:
-        #     self.r = r
-        #     self.nr = len(r)
-        #     self.r_max =
-        # elif (nr is None) and (dr is not None):
-        #     self.dr = dr / 1e3
-        #     self.r = np.arange(self.r_min, self.r_max, self.dr)
-        #     self.nr = len(self.r)
-        # elif (nr is not None) and (dr is None):
-        #     self.nr = nr
-        #     self.r = np.linspace(self.r_min, self.r_max, self.nr)
-        #     self.dr = 1e3 * (self.r[1] - self.r[0])
-        # elif (nr is None) and (dr is None):
-        #     # raise ValueError("Range resolution undefined.")
-        #     self.r = self.r_max
-        self.r_offsets = r_offsets
-        self.n_offsets = len(np.atleast_1d(r_offsets))
+        if tilt is not None:
+            self.r_offsets = (self.z.max() - self.z) * np.sin(tilt * np.pi / 180)
+            self.n_offsets = len(np.atleast_1d(r_offsets))
+        
+        # self.r_offsets = r_offsets
+        
 
 
 class SoundSpeedProfile:
