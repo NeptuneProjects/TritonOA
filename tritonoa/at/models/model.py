@@ -35,32 +35,22 @@ class AcousticsToolboxModel(ABC):
         model_path: Optional[Union[str, bytes, os.PathLike]] = None,
     ) -> int:
         with self._working_directory(self.environment.tmpdir):
-            print(f"{model_name.lower()}.exe {self.environment.title}")
             if model_path is None:
-                try:
-                    retcode = subprocess.call(
-                        f"{model_name.lower()}.exe {self.environment.title}",
-                        shell=True,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                except:
-                    raise UnknownCommandError(
-                        f"Unknown command: {model_name.lower()}.exe",
-                    )
+                command = f"{model_name.lower()}.exe {self.environment.title}"
             else:
-                try:
-                    retcode = subprocess.call(
-                        f"{str(model_path)}/{model_name.lower()}.exe {self.environment.title}",
-                        shell=True,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                except:
-                    raise UnknownCommandError(
-                        f"Unknown command: {str(model_path)}/{model_name.lower()}.exe"
-                    )
-        return retcode
+                command = f"{str(model_path)}/{model_name.lower()}.exe {self.environment.title}"
+
+            try:
+                return subprocess.call(
+                    command,
+                    shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except:
+                raise UnknownCommandError(
+                    f"Unknown command: {str(model_path)}/{model_name.lower()}.exe"
+                )
 
     @staticmethod
     @contextlib.contextmanager
