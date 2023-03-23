@@ -14,8 +14,6 @@ class ProfileArrayLengthError(Exception):
 
 @dataclass
 class SoundSpeedProfileAT(SoundSpeedProfile):
-    # z: np.ndarray
-    # c_p: np.ndarray
     rho: np.ndarray = field(default=np.array([1.0], dtype=np.float64))
     c_s: np.ndarray = field(default=np.array([0.0], dtype=np.float64))
     a_p: np.ndarray = field(default=np.array([0.0], dtype=np.float64))
