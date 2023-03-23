@@ -9,6 +9,14 @@ from struct import unpack
 import numpy as np
 
 
+class SIOReadError(Exception):
+    pass
+
+
+class SIOReadWarning(Warning):
+    pass
+
+
 class SIODataHandler:
     def __init__(self, files: list):
         self.files = sorted(files)
@@ -110,37 +118,11 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
     -------
     X : array (Ns, Nc)
         Data output matrix.
-    Header : dict
+    header : dict
         Descriptors found in file header.
     """
 
-    # if 'fname' not in kwargs.keys():
-    # raise ValueError("must pass me a filename")
-    # file_name = kwargs['fname']
-
-    with open(fname, "rb") as f:
-        # Parameter checking
-        # s_start = 1
-        # if 's_start' in kwargs.keys():
-        #     tmp = kwargs['s_start']
-        #     s_start = max(tmp, 0)
-
-        # if 'Ns' in kwargs.keys():
-        #     Ns = kwargs['Ns']
-        # else:
-        #     Ns = -1
-
-        # if 'channels' in kwargs.keys():
-        #     channels = kwargs['channels']
-        # else:
-        #     channels = []
-
-        # if 'inMem' in kwargs.keys():
-        #     inMem = kwargs['inMem'] # false will read whole file before subsetting
-        # else:
-        #     inMem = True
-
-        # Endian check
+    def endian_check(f):
         endian = ">"
         f.seek(28)
         bs = unpack(endian + "I", f.read(4))[0]  # should be 32677
@@ -149,8 +131,18 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
             f.seek(28)
             bs = unpack(endian + "I", f.read(4))[0]  # should be 32677
             if bs != 32677:
-                raise ValueError("Problem with byte swap constant:" + str(bs))
+                raise SIOReadError("Problem with byte swap constant:" + str(bs))
+        return endian
 
+    def validate_channels(channels, Nc):
+        if len(channels) == 0:
+            channels = list(range(Nc))  # 	fetch all channels
+        if len([x for x in channels if (x < 0) or (x > (Nc - 1))]) != 0:
+            raise SIOReadError("Channel #s must be within range 0 to " + str(Nc - 1))
+        return channels
+
+    with open(fname, "rb") as f:
+        endian = endian_check(f)
         f.seek(0)
         ID = int(unpack(endian + "I", f.read(4))[0])  # ID Number
         Nr = int(unpack(endian + "I", f.read(4))[0])  # # of Records in File
@@ -171,59 +163,51 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
         SpR = int(BpR / BpS)  # # of Samples per Record
 
         # Header object, for output
-        Header = {}
-        Header["ID"] = ID
-        Header["Nr"] = Nr
-        Header["BpR"] = BpR
-        Header["Nc"] = Nc
-        Header["BpS"] = BpS
-        Header["tfReal"] = tfReal
-        Header["SpC"] = SpC
-        Header["RpC"] = RpC
-        Header["SpR"] = SpR
-        Header["fname"] = fname
-        Header["comment"] = comment
-        Header["bs"] = bs
-        Header[
+        header = {}
+        header["ID"] = ID
+        header["Nr"] = Nr
+        header["BpR"] = BpR
+        header["Nc"] = Nc
+        header["BpS"] = BpS
+        header["tfReal"] = tfReal
+        header["SpC"] = SpC
+        header["RpC"] = RpC
+        header["SpR"] = SpR
+        header["fname"] = fname
+        header["comment"] = comment
+        header["bs"] = bs
+        header[
             "Description"
         ] = """
-                    ID= ID Number
-                    Nr  = # of Records in File
+                    ID = ID Number
+                    Nr = # of Records in File
                     BpR = # of Bytes per Record
-                    Nc  = # of channels in File
+                    Nc = # of channels in File
                     BpS = # of Bytes per Sample
                     tfReal = 0 - integer, 1 - real
                     SpC = # of Samples per Channel
                     fname = File name
-                    comment= Comment String
-                    bs  = Endian check value, should be 32677
+                    comment = Comment String
+                    bs = Endian check value, should be 32677
                     """
 
-        # if either channel or # of samples is 0, then return just header
-        if Ns == 0:
+        # If either channel or # of samples is 0, then return just header
+        if (Ns == 0) or ((len(channels) == 1) and (channels[0] == -1)):
             X = []
-            return X, Header
-
-        if (len(channels) == 1) and (channels[0] == -1):
-            X = []
-            return X, Header
+            return X, header
 
         # Recheck parameters against header info
         Ns_max = SpC - s_start + 1
         if Ns == -1:
             Ns = Ns_max  # 	fetch all samples from start point
         if Ns > Ns_max:
-            print(
-                "More samples requested than present in data file. Return max num samples:",
-                Ns_max,
+            SIOReadWarning(
+                f"More samples requested than present in data file. Returning max num samples: {Ns_max}"
             )
             Ns = Ns_max
 
-        # Check validity of Channeli list
-        if len(channels) == 0:
-            channels = list(range(Nc))  # 	fetch all channels
-        if len([x for x in channels if (x < 0) or (x > (Nc - 1))]) != 0:
-            raise ValueError("Channel #s must be within range 0 to " + str(Nc - 1))
+        # Check validity of channel list
+        channels = validate_channels(channels, Nc)
 
         ## Read in file according to specified method
         # Calculate file offsets
@@ -246,9 +230,9 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
             count = len(Data)
             Data = np.array(Data)  # cast to numpy array
             if count != r_total * SpR:
-                raise ValueError("Not enough samples read from file")
+                raise SIOReadError("Not enough samples read from file")
 
-            # 	Reshape data into a matrix of records
+            # Reshape data into a matrix of records
             Data = np.reshape(Data, (r_total, SpR)).T
 
             # 	Select each requested channel and stack associated records
@@ -269,16 +253,11 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
             if m > Ns:
                 X = X[: int(Ns), :]
             if m < Ns:
-                raise ValueError(
-                    "Requested # of samples not returned. Check that s_start is multiple of rec_num: "
-                    + str(SpR)
+                raise SIOReadError(
+                    f"Requested # of samples not returned. Check that s_start ({s_start}) is multiple of rec_num: {SpR}"
                 )
 
-        # Incremental loading
-        else:
-            print("Not yet implemented incremental loading")
-
-    return X, Header
+    return X, header
 
     # class SioStream_:
 
