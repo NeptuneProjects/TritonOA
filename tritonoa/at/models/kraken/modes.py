@@ -1,118 +1,13 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-"""This module contains classes and functions required to interact with
-the KRAKEN ocean acoustic modeling software.
-
-William Jenkins
-Scripps Institution of Oceanography
-wjenkins |a|t| ucsd |d|o|t| edu
-
-Licensed under GNU GPLv3; see LICENSE in repository for full text.
-"""
-
-from pathlib import Path
+from dataclasses import dataclass, field
 from struct import unpack
-from typing import Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
-from tritonoa.core import (
-    ModelConfiguration,
-    Parameterization,
-    Layer,
-    Source,
-    SoundSpeedProfile,
-    Receiver,
-    Bottom,
-    Top,
-)
-from tritonoa.sp import pressure_field
-
-
-class KRAKENModelConfiguration(ModelConfiguration):
-    def __init__(
-        self,
-        title,
-        freq,
-        layers: list,
-        top,
-        bottom,
-        source,
-        receiver,
-        clow=0,
-        chigh=None,
-        nprof=1,
-        rprof=0.0,
-        biolayers=None,
-        tmpdir=Path.cwd(),
-        **kwargs,
-    ):
-        super().__init__(title, freq, layers, top, bottom, biolayers, tmpdir)
-        self.source = source
-        self.receiver = receiver
-        self.clow = clow
-        if chigh is None:
-            self.chigh = self.bottom.c_p
-        else:
-            self.chigh = chigh
-        self.nprof = nprof
-        self.rprof = rprof
-
-    def _write_envfil_KRAKEN(self):
-        envfil = self._write_envfil()
-        with open(envfil, "a") as f:
-            # Block 7 - Phase Speed Limits
-            f.write(
-                f"{self.clow:6.0f} {self.chigh:6.0f} " + "\t \t ! cLow cHigh (m/s) \r\n"
-            )
-            # Block 8 - Maximum Range
-            f.write(f"{self.receiver.r_max:8.2f} \t \t \t ! RMax (km \r\n")
-            # Block 9 - Source/Receiver Depths
-            # Number of Source Depths
-            f.write(f"{self.source.nz:5d} \t \t \t \t ! NSD")
-            # Source Depths
-            # if (self.source.nz > 1) and self._equally_spaced(self.source.z):
-            if (self.source.nz > 1) and self.source.equally_spaced():
-                f.write(f"\r\n    {self.source.z[0]:6f} {self.source.z[-1]:6f}")
-            else:
-                f.write(f"\r\n    ")
-                for zz in np.atleast_1d(self.source.z):
-                    f.write(f"{zz:6f} ")
-            f.write("/ \t ! SD(1)  ... (m) \r\n")
-            # Number of Receiver Depths
-            f.write(f"{self.receiver.nz:5d} \t \t \t \t ! NRD")
-            # Receiver Depths
-            # if (self.receiver.nz > 1) and self._equally_spaced(self.receiver.z):
-            if (self.receiver.nz > 1) and self.receiver.equally_spaced():
-                f.write(f"\r\n    {self.receiver.z[0]:6f} {self.receiver.z[-1]:6f}")
-            else:
-                f.write(f"\r\n    ")
-                for zz in np.atleast_1d(self.receiver.z):
-                    f.write(f"{zz:6f} ")
-            f.write("/ \t ! RD(1)  ... (m) \r\n")
-
-        return envfil
-
-    def run(self, model="kraken", fldflag=False, verbose=False):
-        """Returns modes, pressure field, rvec, zvec"""
-        if verbose:
-            print(f"Running {model.upper()}")
-        _ = self._write_envfil_KRAKEN()
-        self.run_model(model=model)
-        self.modes = Modes(self.freq, self.source, self.receiver)
-        self.modes.read_modes(self.tmpdir / self.title)
-        if fldflag:
-            _ = self.modes.field()
-
-    # @staticmethod
-    # def _equally_spaced(x):
-    #     n = len(x)
-    #     xtemp = np.linspace(x[0], x[-1], n)
-    #     delta = abs(x[:] - xtemp[:])
-    #     if np.max(delta) < 1e-9:
-    #         return True
-    #     else:
-    #         return False
+from tritonoa.signal.sp import pressure_field
 
 
 class Modes:
@@ -355,124 +250,12 @@ class Modes:
         return self.p
 
 
+@dataclass
 class ModesHalfspace:
-    def __init__(
-        self,
-        bc=None,
-        z=np.array([]),
-        alphaR=np.array([]),
-        betaR=np.array([]),
-        alphaI=np.array([]),
-        betaI=np.array([]),
-        rho=np.array([]),
-    ):
-        self.bc = bc
-        self.z = z
-        self.alphaR = alphaR
-        self.betaR = betaR
-        self.alphaI = alphaI
-        self.betaI = betaI
-        self.rho = rho
-
-
-def run_kraken(parameters):
-
-    # Miscellaneous Parameters
-    title = parameters.get("title", "Kraken")
-    tmpdir = parameters.get("tmpdir", "tmp")
-    model = parameters.get("model", "KRAKEN")
-
-    # Top Parameters
-    top = Top(
-        opt=parameters.get("top_opt", "CVF    "),
-        z=parameters.get("top_z"),
-        c_p=parameters.get("top_c_p"),
-        c_s=parameters.get("top_c_s", 0.0),
-        rho=parameters.get("top_rho"),
-        a_p=parameters.get("top_a_p", 0.0),
-        a_s=parameters.get("top_a_s", 0.0),
-    )
-
-    # Layer Parameters
-    layers = [
-        Layer(SoundSpeedProfile(**kwargs)) for kwargs in parameters.get("layerdata")
-    ]
-
-    # Bottom Parameters
-    bottom = Bottom(
-        opt=parameters.get("bot_opt", "A"),
-        sigma=parameters.get("bot_sigma", 0.0),
-        z=parameters.get("bot_z", layers[-1].z_max + 1),
-        c_p=parameters.get("bot_c_p"),
-        c_s=parameters.get("bot_c_s", 0.0),
-        rho=parameters.get("bot_rho"),
-        a_p=parameters.get("bot_a_p", 0.0),
-        a_s=parameters.get("bot_a_s", 0.0),
-        mz=parameters.get("bot_mz"),
-    )
-
-    # Source Parameters
-    source = Source(z=parameters.get("src_z"))
-
-    # Receiver Parameters
-    receiver = Receiver(
-        z=parameters.get("rec_z"),
-        # r_max=parameters.get("rec_r_max"),
-        r=parameters.get("rec_r"),
-        # nr=parameters.get("rec_nr"),
-        # dr=parameters.get("rec_dr"),
-        # r_min=parameters.get("rec_r_min", 1.e-3),
-        tilt=parameters.get("tilt", None)
-        # r_offsets=parameters.get("rec_r_offsets", 0.0),
-    )
-
-    # Freq/Mode Parameters
-    freq = parameters.get("freq", 100.0)
-    clow = parameters.get("clow", 1500.0)
-    chigh = parameters.get("chigh", 1600.0)
-
-    # Instantiate Model
-    kmodel = KRAKENModelConfiguration(
-        title,
-        freq,
-        layers,
-        top,
-        bottom,
-        source,
-        receiver,
-        clow=clow,
-        chigh=chigh,
-        tmpdir=tmpdir,
-    )
-
-    # Run Model
-    kmodel.run(fldflag=True, model=model)
-
-    # Return Complex Pressure at Receiver
-    return kmodel.modes.p
-
-
-class KRAKENParameterization(Parameterization):
-    def __init__(self, parameters=None, path=None):
-        super().__init__(parameters, path)
-        if self.parameters is not None:
-            self.parse_KRAKEN_parameters()
-            self.modelconfig = KRAKENModelConfiguration(**self.__dict__)
-
-    def run(self):
-        self.modelconfig.run(fldflag=True, model=self.model)
-        return self.modelconfig.modes.p
-
-    def parse_KRAKEN_parameters(self):
-        self._parse_mode_parameters()
-
-    def _parse_mode_parameters(self):
-        self.clow = self.parameters.get("clow", 1500.0)
-        self.chigh = self.parameters.get("chigh", 1600.0)
-
-
-def clean_up_kraken_files(path: Union[Path, str]):
-    if isinstance(path, str):
-        path = Path(path)
-    extensions = ["env", "mod", "prt"]
-    [[f.unlink() for f in path.glob(f"*.{ext}")] for ext in extensions]
+    bc: Optional[Union[Any, None]] = None
+    z: Optional[np.ndarray] = field(default_factory=np.array([]))
+    alphaR: Optional[np.ndarray] = field(default_factory=np.array([]))
+    betaR: Optional[np.ndarray] = field(default_factory=np.array([]))
+    alphaI: Optional[np.ndarray] = field(default_factory=np.array([]))
+    betaI: Optional[np.ndarray] = field(default_factory=np.array([]))
+    rho: Optional[np.ndarray] = field(default_factory=np.array([]))

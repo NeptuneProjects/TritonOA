@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-
-"""This module contains functions for reading and writing acoustic and 
-related data.
-
-William Jenkins
-Scripps Institution of Oceanography
-wjenkins |a|t| ucsd |d|o|t| edu
-
-Licensed under GNU GPLv3; see LICENSE in repository for full text.
-"""
+# -*- coding: utf-8 -*-
 
 import datetime
 from math import ceil, floor
@@ -16,7 +7,6 @@ from pathlib import Path
 from struct import unpack
 
 import numpy as np
-import pandas as pd
 
 
 class SIODataHandler:
@@ -85,44 +75,6 @@ def convert_sio_to_npy(source, destination):
     for f in source:
         X, header = sioread(f)
         np.savez(destination / f.name, X, header)
-
-
-def read_ssp(fname, zcol, ccol, header=None):
-    """Reads SSP from a delimited file.
-
-    Parameters
-    ----------
-    fname : object (Path)
-        Path to the file to be read.
-    zcol : int
-        Column index for depth data.
-    ccol : int
-        Column index for speed data.
-    header : int
-        Line number of header (default: None)
-
-    Returns
-    -------
-    array
-        Array of depth values.
-    array
-        Array of sound speed values.
-    DataFrame
-        DataFrame containing depth and sound speed values.
-    """
-
-    df = pd.read_csv(
-        fname, sep=None, header=header, engine="python", skipinitialspace=True
-    )
-    df = df.drop(
-        columns=df.columns[
-            [i for i in list(range(len(df.columns))) if i not in (zcol, ccol)]
-        ]
-    )
-    mapper = {k: v for k, v in zip(list(df.columns), ["depth", "speed"])}
-    df = df.rename(columns=mapper)
-
-    return df["depth"].values, df["speed"].values, df
 
 
 def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
@@ -328,8 +280,9 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
 
     return X, Header
 
+    # class SioStream_:
 
-# class SioStream_:
+
 #     """
 #     Written by Hunter Akins, 4 June 2019
 #     data object implementing indexing and return sequential data
