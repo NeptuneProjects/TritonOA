@@ -3,6 +3,7 @@
 
 from pathlib import Path
 
+
 def enforce_path_type(path):
     if isinstance(path, str):
         path = Path(path)
