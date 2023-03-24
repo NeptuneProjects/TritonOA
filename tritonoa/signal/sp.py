@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 """This module contains commonly used signal processing functions for
 ocean acoustics workflows.
@@ -14,18 +15,10 @@ import numpy as np
 from scipy.special import hankel1
 
 
-# TODO: Consider building an object for matched field processing
-# workflows.
-# class mfp:
-#     def __init__(self, object1, object2, space=["r", "z"]):
-#         self.object1 = object1
-#         self.object2 = object2
-#         self.space = space
-#
-#     def run(self):
-#         for param in self.space:
-#             pass
-#         return
+def covariance(a: np.ndarray, b: np.ndarray=None) -> np.ndarray:
+    if b is None:
+        b = a
+    return a.dot(b.conj().T)
 
 
 def normalize_pressure(p, log=False):
@@ -75,13 +68,14 @@ def pressure_field(phi_src, phi_rec, k, r, r_offsets=None):
     Notes
     -----
     This function implements equation 5.13 from [1]. NOTE: This implementation
-    is in contrast to the KRAKEN MATLAB implementation, which normalizes the 
+    is in contrast to the KRAKEN MATLAB implementation, which normalizes the
     output by a factor of (1 / (4 * pi)).
 
     [1] Finn B. Jensen, William A. Kuperman, Michael B. Porter, and
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
+    
     if r_offsets is not None:
         M = phi_rec.shape[0]
         N = len(r)
@@ -101,7 +95,7 @@ def pressure_field(phi_src, phi_rec, k, r, r_offsets=None):
     # p = (phi_src * phi_rec).dot(hankel1(0, -k * r))
     # p = (phi_src * phi_rec).dot(hankel1(0, k.conj() * r))
     # TODO: Replace hankel1 with asymptotic form
-    
+
     # print(k)
     # p = np.conj(1j / (4 * 1.0) * p)
     return p
@@ -113,16 +107,18 @@ def bf_cbf(K, w):
 
     Parameters
     ----------
-    K : array
-        Covariance matrix of received complex pressure field.
+    K : np.ndarray (M x M)
+        Covariance matrix of received complex pressure field measured at
+        M points.
 
-    w : array
-        Vector containing replica complex pressure field.
+    w : np.ndarray (M (x N))
+        Vector containing N replica complex pressure field simulated at
+        M points.
 
     Returns
     -------
-    array
-        Output of the Bartlett processor.
+    np.ndarray (1 x N)
+        Output of the Bartlett processor for N replicas.
 
     Notes
     -----
@@ -134,7 +130,7 @@ def bf_cbf(K, w):
     Springer Publishing Company, Incorporated.
     """
 
-    return w.conj().T.dot(K).dot(w)
+    return np.diag(w.conj().T.dot(K).dot(w))
 
 
 def bf_mvdr(K, w):
