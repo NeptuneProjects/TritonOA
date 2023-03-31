@@ -3,13 +3,16 @@
 
 from dataclasses import dataclass
 import os
-from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from tritonoa.at.env.array import Receiver, Source
 from tritonoa.at.env.env import AcousticsToolboxEnvironment
 from tritonoa.at.models.kraken.modes import Modes
 from tritonoa.at.models.model import AcousticsToolboxModel
+from tritonoa.utilities import enforce_path_type
+
+
+KRAKEN_EXTENSIONS = ["env", "mod", "prt"]
 
 
 @dataclass(kw_only=True)
@@ -77,7 +80,5 @@ class KrakenModel(AcousticsToolboxModel):
 
 
 def clean_up_kraken_files(path: Union[str, bytes, os.PathLike]) -> None:
-    if isinstance(path, str):
-        path = Path(path)
-    extensions = ["env", "mod", "prt"]
-    [[f.unlink() for f in path.glob(f"*.{ext}")] for ext in extensions]
+    path = enforce_path_type(path)
+    [[f.unlink() for f in path.glob(f"*.{ext}")] for ext in KRAKEN_EXTENSIONS]
