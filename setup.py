@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 def setup_package():
@@ -9,7 +9,7 @@ def setup_package():
         url="https://github.com/NeptuneProjects/TritonOA",
         author="William F. Jenkins II",
         author_email="wjenkins@ucsd.edu",
-        packages=["tritonoa"],
+        packages=find_packages(),
         install_requires=[
             "cmocean",
             "feather-format",
