@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from tritonoa.at.env.array import Receiver, Source
-from tritonoa.at.env.halfspace import Top, Bottom
+from tritonoa.at.env.halfspace import Bottom, Top
 from tritonoa.at.env.ssp import SoundSpeedProfileAT, SSPLayer
 from tritonoa.at.models.kraken.kraken import KrakenEnvironment, KrakenModel
 
 
-def run_kraken(parameters):
+def run_kraken(parameters: dict) -> complex:
     # Miscellaneous Parameters
     title = parameters.get("title", "Kraken")
     tmpdir = parameters.get("tmpdir", "tmp")
@@ -50,7 +50,7 @@ def run_kraken(parameters):
     receiver = Receiver(
         z=parameters.get("rec_z"),
         r=parameters.get("rec_r"),
-        tilt=parameters.get("tilt", None)
+        tilt=parameters.get("tilt", None),
     )
 
     # Freq/Mode Parameters
@@ -60,11 +60,11 @@ def run_kraken(parameters):
 
     # Instantiate Environment
     environment = KrakenEnvironment(
-        title,
-        freq,
-        layers,
-        top,
-        bottom,
+        title=title,
+        freq=freq,
+        layers=layers,
+        top=top,
+        bottom=bottom,
         tmpdir=tmpdir,
         source=source,
         receiver=receiver,

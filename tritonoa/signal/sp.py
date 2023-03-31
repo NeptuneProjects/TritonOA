@@ -11,17 +11,19 @@ wjenkins |a|t| ucsd |d|o|t| edu
 Licensed under GNU GPLv3; see LICENSE in repository for full text.
 """
 
+from typing import Optional, Union
+
 import numpy as np
 from scipy.special import hankel1
 
 
-def covariance(a: np.ndarray, b: np.ndarray=None) -> np.ndarray:
+def covariance(a: np.ndarray, b: np.ndarray = None) -> np.ndarray:
     if b is None:
         b = a
     return a.dot(b.conj().T)
 
 
-def normalize_pressure(p, log=False):
+def normalize_pressure(p: Union[float, np.ndarray], log: bool = False) -> np.ndarray:
     """Takes complex pressure and returns normalized pressure.
 
     Parameters
@@ -44,7 +46,13 @@ def normalize_pressure(p, log=False):
     return pn
 
 
-def pressure_field(phi_src, phi_rec, k, r, r_offsets=None):
+def pressure_field(
+    phi_src: np.ndarray,
+    phi_rec: np.ndarray,
+    k: np.ndarray,
+    r: np.ndarray,
+    r_offsets: Optional[Union[float, np.ndarray]] = None,
+) -> np.ndarray:
     """Calculates pressure field given range-independent vertical mode
     functions.
 
@@ -75,7 +83,7 @@ def pressure_field(phi_src, phi_rec, k, r, r_offsets=None):
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
-    
+
     if r_offsets is not None:
         M = phi_rec.shape[0]
         N = len(r)
@@ -101,7 +109,7 @@ def pressure_field(phi_src, phi_rec, k, r, r_offsets=None):
     return p
 
 
-def bf_cbf(K, w):
+def bf_cbf(K: np.ndarray, w: np.ndarray) -> np.ndarray:
     """Returns Bartlett processor (e.g., for beamforming or matched
     field processing).
 
@@ -133,7 +141,7 @@ def bf_cbf(K, w):
     return np.diag(w.conj().T.dot(K).dot(w))
 
 
-def bf_mvdr(K, w):
+def bf_mvdr(K: np.ndarray, w: np.ndarray) -> np.ndarray:
     """Returns MVDR processor (e.g., for beamforming or matched
     field processing).
 
@@ -162,18 +170,25 @@ def bf_mvdr(K, w):
     return 1 / (w.conj().T.dot(np.linalg.inv(K)).dot(w))
 
 
-def bf_music(K, w, num_src=1):
+def bf_music(K: np.ndarray, w: np.ndarray, num_src: int = 1) -> np.ndarray:
     _, V = np.linalg.eig(K)
     V = V[:, 0:-num_src]
     return 1 / (w.conj().T.dot(V).dot(V.conj().T).dot(w))
 
 
-def bf_eigen(K, w, num_src=1):
+def bf_eigen(K: np.ndarray, w: np.ndarray, num_src: int = 1) -> np.ndarray:
     d, V = np.linalg.eig(K)
 
 
-def beamformer(K, r_hat, atype="cbf", num_src=1, abs_value=True):
-    K = (K + K.conj().T) / 2  # Enforce Hermitian
+def beamformer(
+    K: np.ndarray,
+    r_hat: np.ndarray,
+    atype: str = "cbf",
+    num_src: int = 1,
+    abs_value: bool = True,
+) -> np.ndarray:
+    """Returns the output of a beamformer."""
+    K = enforce_hermitian(K)
     w = r_hat / np.linalg.norm(r_hat)
 
     if atype == "cbf":
@@ -193,7 +208,7 @@ def beamformer(K, r_hat, atype="cbf", num_src=1, abs_value=True):
         return B
 
 
-def snrdb_to_sigma(snrdb, sig_ampl=1.0):
+def snrdb_to_sigma(snrdb: float, sig_ampl: float = 1.0) -> float:
     """Returns the standard deviation of white Gaussian noise given SNR (dB) and
     number of elements in an array.
 
@@ -212,7 +227,9 @@ def snrdb_to_sigma(snrdb, sig_ampl=1.0):
     return 10 ** (-snrdb / 20) * sig_ampl
 
 
-def added_wng(size, sigma=1.0, cmplx=False, seed=None):
+def added_wng(
+    size: int, sigma: float = 1.0, cmplx: bool = False, seed: Optional[int] = None
+) -> np.ndarray:
     if seed is None:
         rng = np.random
     else:
@@ -225,3 +242,7 @@ def added_wng(size, sigma=1.0, cmplx=False, seed=None):
         )
     else:
         return rng.normal(0, sigma, size)
+
+
+def enforce_hermitian(A: np.ndarray) -> np.ndarray:
+    return (A + A.conj().T) / 2

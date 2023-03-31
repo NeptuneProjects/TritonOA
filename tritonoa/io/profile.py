@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+from typing import Optional, Union
+
 import pandas as pd
 
 
-def read_ssp(fname, zcol, ccol, header=None):
+def read_ssp(
+    fname: Union[str, bytes, os.PathLike],
+    zcol: int,
+    ccol: int,
+    header: Optional[int] = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Reads SSP from a delimited file.
 
     Parameters

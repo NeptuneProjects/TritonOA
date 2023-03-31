@@ -3,8 +3,10 @@
 
 import datetime
 from math import ceil, floor
+import os
 from pathlib import Path
 from struct import unpack
+from typing import Optional, Union
 
 import numpy as np
 
@@ -18,15 +20,21 @@ class SIOReadWarning(Warning):
 
 
 class SIODataHandler:
-    def __init__(self, files: list):
+    def __init__(self, files: list) -> None:
         self.files = sorted(files)
 
     @staticmethod
-    def load_merged(fname):
+    def load_merged(
+        fname: Union[str, bytes, os.PathLike]
+    ) -> tuple[np.ndarray, np.ndarray]:
         data = np.load(fname)
         return data["X"], data["t"]
 
-    def to_numpy(self, channels_to_remove=-1, destination=None):
+    def to_numpy(
+        self,
+        channels_to_remove: Union[int, list[int]] = -1,
+        destination: Optional[Union[str, bytes, os.PathLike]] = None,
+    ) -> None:
         for f in self.files:
             data, header = sioread(f)
             if channels_to_remove is not None:
@@ -42,8 +50,14 @@ class SIODataHandler:
 
     # Merge data according to datetimes
     def merge(
-        self, base_time, start, end, fs, channels_to_remove=None, destination=None
-    ):
+        self,
+        base_time: str,
+        start: str,
+        end: str,
+        fs: float,
+        channels_to_remove: Optional[Union[int, list[int]]] = None,
+        destination: Union[str, bytes, os.PathLike] = "merged.npz",
+    ) -> tuple[np.ndarray, np.ndarray]:
         # Load data from files
         data = []
         for f in self.files:
@@ -69,23 +83,24 @@ class SIODataHandler:
         data = data[idx]
         t = t[idx]
         # Save to file
-        if destination is not None:
-            if isinstance(destination, str):
-                destination = Path(destination)
-            np.savez(destination, X=data, t=t)
-        else:
-            np.savez("merged.npz", X=data, t=t)
+        np.savez(destination, X=data, t=t)
 
         return data, t
 
 
-def convert_sio_to_npy(source, destination):
+def convert_sio_to_npy(source: os.PathLike, destination: os.PathLike) -> None:
     for f in source:
         X, header = sioread(f)
         np.savez(destination / f.name, X, header)
 
 
-def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
+def sioread(
+    fname: Union[str, bytes, os.PathLike],
+    s_start: int = 1,
+    Ns: int = -1,
+    channels: list[int] = [],
+    inMem: bool = True,
+) -> tuple[np.ndarray, dict]:
     """Translation of Jit Sarkar's sioread.m to Python (which was a
     modification of Aaron Thode's with contributions from Geoff Edelman,
     James Murray, and Dave Ensberg).
@@ -122,7 +137,7 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
         Descriptors found in file header.
     """
 
-    def endian_check(f):
+    def endian_check(f: os.PathLike) -> str:
         endian = ">"
         f.seek(28)
         bs = unpack(endian + "I", f.read(4))[0]  # should be 32677
@@ -134,7 +149,7 @@ def sioread(fname, s_start=1, Ns=-1, channels=[], inMem=True):
                 raise SIOReadError("Problem with byte swap constant:" + str(bs))
         return endian
 
-    def validate_channels(channels, Nc):
+    def validate_channels(channels: list[int], Nc: int) -> list[int]:
         if len(channels) == 0:
             channels = list(range(Nc))  # 	fetch all channels
         if len([x for x in channels if (x < 0) or (x > (Nc - 1))]) != 0:

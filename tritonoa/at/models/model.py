@@ -54,7 +54,7 @@ class AcousticsToolboxModel(ABC):
 
     @staticmethod
     @contextlib.contextmanager
-    def _working_directory(path):
+    def _working_directory(path: Union[str, bytes, os.PathLike]) -> None:
         prev_cwd = Path.cwd()
         os.chdir(path)
         try:

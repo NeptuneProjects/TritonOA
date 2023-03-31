@@ -20,7 +20,7 @@ class SoundSpeedProfile(ABC):
     def __post_init__(self):
         """Post-initialization hook."""
 
-    def format_data(self):
+    def format_data(self) -> None:
         self.enforce_ndarrays()
         self.check_dimensions()
         self.form_ndarrays()

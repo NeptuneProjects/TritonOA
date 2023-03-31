@@ -7,16 +7,17 @@ from typing import Any, Optional, Union
 
 import numpy as np
 
+from tritonoa.at.env.array import Receiver, Source
 from tritonoa.signal.sp import pressure_field
 
 
 class Modes:
-    def __init__(self, freq, source, receiver):
+    def __init__(self, freq: float, source: Source, receiver: Receiver):
         self.freq = freq
         self.source = source
         self.receiver = receiver
 
-    def read_modes(self, modfil, modes=None):
+    def read_modes(self, modfil: str, modes: Optional[Union[np.ndarray, list]] = None):
         """Read the modes produced by KRAKEN usage:
         keys are 'fname', 'freq', 'modes'
         'fname' and 'freq' are mandatory, 'modes' is if you only want a
@@ -225,7 +226,7 @@ class Modes:
         self._format_modes()
         return self.modfil
 
-    def _format_modes(self):
+    def _format_modes(self) -> None:
         self.k = np.expand_dims(self.k, 1)
         phi = self.phi
         ind = np.argmin(abs(self.source.z - self.z))
@@ -239,7 +240,7 @@ class Modes:
         self.phi_src = phi_src
         self.phi_rec = phi_rec
 
-    def field(self):
+    def field(self) -> np.ndarray:
         self.p = pressure_field(
             self.phi_src,
             self.phi_rec,
@@ -252,10 +253,10 @@ class Modes:
 
 @dataclass
 class ModesHalfspace:
-    bc: Optional[Union[Any, None]] = None
-    z: Optional[np.ndarray] = field(default_factory=np.array([]))
-    alphaR: Optional[np.ndarray] = field(default_factory=np.array([]))
-    betaR: Optional[np.ndarray] = field(default_factory=np.array([]))
-    alphaI: Optional[np.ndarray] = field(default_factory=np.array([]))
-    betaI: Optional[np.ndarray] = field(default_factory=np.array([]))
-    rho: Optional[np.ndarray] = field(default_factory=np.array([]))
+    bc: Optional[Any] = None  # TODO: Clarify type
+    z: np.ndarray = field(default_factory=np.array([]))
+    alphaR: np.ndarray = field(default_factory=np.array([]))
+    betaR: np.ndarray = field(default_factory=np.array([]))
+    alphaI: np.ndarray = field(default_factory=np.array([]))
+    betaI: np.ndarray = field(default_factory=np.array([]))
+    rho: np.ndarray = field(default_factory=np.array([]))

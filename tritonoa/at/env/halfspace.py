@@ -12,12 +12,12 @@ class UndefinedPropertyError(Exception):
 @dataclass
 class Halfspace:
     opt: str
-    z: Optional[Union[float, None]] = None
-    c_p: Optional[Union[float, None]] = None
-    c_s: Optional[Union[float, None]] = 0.0
-    rho: Optional[Union[float, None]] = None
-    a_p: Optional[Union[float, None]] = 0.0
-    a_s: Optional[Union[float, None]] = 0.0
+    z: Optional[float] = None
+    c_p: Optional[float] = None
+    c_s: float = 0.0
+    rho: Optional[float] = None
+    a_p: float = 0.0
+    a_s: float = 0.0
 
 
 @dataclass
@@ -38,8 +38,8 @@ class Top(Halfspace):
 @dataclass
 class Bottom(Halfspace):
     opt: str = "R"
-    sigma: Optional[Union[float, None]] = 0.0
-    mz: Optional[Union[float, None]] = None
+    sigma: float = 0.0
+    mz: Optional[float] = None
 
     def __post_init__(self):
         self.validate_options()

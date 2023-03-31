@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import os
 from pathlib import Path
 from typing import Any, Optional, Union
 
-import numpy as np
-
+from tritonoa.at.env.array import Receiver, Source
 from tritonoa.at.env.env import AcousticsToolboxEnvironment
 from tritonoa.at.models.kraken.modes import Modes
 from tritonoa.at.models.model import AcousticsToolboxModel
@@ -15,12 +14,12 @@ from tritonoa.at.models.model import AcousticsToolboxModel
 
 @dataclass(kw_only=True)
 class KrakenEnvironment(AcousticsToolboxEnvironment):
-    source: Any
-    receiver: Any
-    clow: Optional[float] = 0
-    chigh: Optional[Union[float, None]] = None
+    source: Source
+    receiver: Receiver
+    clow: float = 0
+    chigh: Optional[float] = None
 
-    def write_envfil(self):
+    def write_envfil(self) -> Union[str, bytes, os.PathLike]:
         envfil = self._write_envfil()
         with open(envfil, "a") as f:
             # Block 7 - Phase Speed Limits
@@ -62,20 +61,22 @@ class KrakenModel(AcousticsToolboxModel):
         self,
         model_name: str,
         model_path: Optional[Union[str, bytes, os.PathLike]] = None,
-        fldflag=False,
-    ) -> Any:
+        fldflag: bool = False,
+    ) -> None:
         # def run(self, model="kraken", fldflag=False, verbose=False):
         """Returns modes, pressure field, rvec, zvec"""
 
         _ = self.environment.write_envfil()
         self.run_model(model_name=model_name, model_path=model_path)
-        self.modes = Modes(self.environment.freq, self.environment.source, self.environment.receiver)
+        self.modes = Modes(
+            self.environment.freq, self.environment.source, self.environment.receiver
+        )
         self.modes.read_modes(self.environment.tmpdir / self.environment.title)
         if fldflag:
             _ = self.modes.field()
 
 
-def clean_up_kraken_files(path: Union[Path, str]):
+def clean_up_kraken_files(path: Union[str, bytes, os.PathLike]) -> None:
     if isinstance(path, str):
         path = Path(path)
     extensions = ["env", "mod", "prt"]

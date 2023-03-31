@@ -4,7 +4,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import os
-from typing import List, Optional, Union
+from typing import Any, List, Union
 
 from tritonoa.at.env.halfspace import Bottom, Top
 from tritonoa.at.env.ssp import SSPLayer
@@ -18,20 +18,20 @@ class AcousticsToolboxEnvironment(ABC):
     layers: List[SSPLayer]
     top: Top
     bottom: Bottom
-    tmpdir: Optional[Union[str, bytes, os.PathLike]] = "."
+    tmpdir: Union[str, bytes, os.PathLike] = "."
 
     def __post_init__(self):
         self.nmedia = len(self.layers)
         self.tmpdir = toautils.enforce_path_type(self.tmpdir)
     
     @abstractmethod
-    def write_envfil(self):
+    def write_envfil(self) -> Any:
         pass
     
-    def _check_tmpdir(self):
+    def _check_tmpdir(self) -> None:
         self.tmpdir.mkdir(parents=True, exist_ok=True)
     
-    def _write_envfil(self):
+    def _write_envfil(self) -> os.PathLike:
         self._check_tmpdir()
         envfil = self.tmpdir / f"{self.title}.env"
         with open(envfil, "w") as f:
