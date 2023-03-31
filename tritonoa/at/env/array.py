@@ -69,8 +69,8 @@ class Receiver(Array):
     """
 
     r: np.ndarray
-    tilt: Optional[Union[float, None]] = None
-    r_offsets: Optional[Union[np.ndarray, None]] = None
+    tilt: Optional[float] = None
+    r_offsets: Optional[np.ndarray] = None
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -94,5 +94,7 @@ class Receiver(Array):
         self.nr = len(self.r)
 
     @staticmethod
-    def array_tilt(z, tilt):
+    def array_tilt(
+        z: Union[float, np.ndarray], tilt: float
+    ) -> Union[float, np.ndarray]:
         return (z.max() - z) * np.sin(tilt * np.pi / 180)
