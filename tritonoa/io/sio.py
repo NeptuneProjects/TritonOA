@@ -69,7 +69,9 @@ class SIODataHandler:
         None, then the specified channels will be removed from the data.
         """
 
-        print(f"Starting process pool with {max_workers} workers.")
+        print(
+            f"Starting process pool with {max_workers} workers for {len(self.files)} files."
+        )
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             [
                 executor.submit(load_sio_save_numpy, f, channels_to_remove, destination)
