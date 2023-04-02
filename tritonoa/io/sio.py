@@ -84,6 +84,7 @@ class SIODataHandler:
 
     @staticmethod
     def load_sio_save_numpy(f, channels_to_remove, destination):
+        print("I'm doing something!")
         data, header = sioread(f)
 
         if channels_to_remove is not None:
@@ -94,6 +95,7 @@ class SIODataHandler:
 
         np.save(f, data)
         np.save(f.parent / (f.name + "_header"), header)
+        print("I'm done!")
 
     # Merge data according to datetimes
     def merge_numpy_files(
