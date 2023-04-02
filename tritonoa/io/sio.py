@@ -69,36 +69,31 @@ class SIODataHandler:
         None, then the specified channels will be removed from the data.
         """
         # for f in self.files:
-        #     data, header = sioread(f)
-
-        #     if channels_to_remove is not None:
-        #         data = np.delete(data, np.s_[channels_to_remove], axis=1)
-
-        #     if destination is not None:
-        #         f = Path(destination) / f.name
-
-        #     np.save(f, data)
-        #     np.save(f.parent / (f.name + "_header"), header)
-        
-        def load_sio_save_numpy(f, channels_to_remove, destination):
-            data, header = sioread(f)
-
-            if channels_to_remove is not None:
-                data = np.delete(data, np.s_[channels_to_remove], axis=1)
-
-            if destination is not None:
-                f = Path(destination) / f.name
-
-            np.save(f, data)
-            np.save(f.parent / (f.name + "_header"), header)
+        #     self.load_sio_save_numpy(f, channels_to_remove, destination)
 
         with ProcessPoolExecutor(max_workers=4) as executor:
-            executor.map(load_sio_save_numpy, zip(self.files, repeat(channels_to_remove), repeat(destination)))
+            executor.map(
+                self.load_sio_save_numpy,
+                zip(self.files, repeat(channels_to_remove), repeat(destination)),
+            )
 
     @staticmethod
     def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
         """Loads merged numpy data from file and returns data and time."""
         return DataStream().load(fname)
+
+    @staticmethod
+    def load_sio_save_numpy(f, channels_to_remove, destination):
+        data, header = sioread(f)
+
+        if channels_to_remove is not None:
+            data = np.delete(data, np.s_[channels_to_remove], axis=1)
+
+        if destination is not None:
+            f = Path(destination) / f.name
+
+        np.save(f, data)
+        np.save(f.parent / (f.name + "_header"), header)
 
     # Merge data according to datetimes
     def merge_numpy_files(
