@@ -4,6 +4,7 @@
 from dataclasses import dataclass
 import datetime
 from math import ceil, floor
+from multiprocessing import Pool
 import os
 from pathlib import Path
 from struct import unpack
@@ -66,7 +67,19 @@ class SIODataHandler:
         """Converts .sio files to .npy files. If channels_to_remove is not
         None, then the specified channels will be removed from the data.
         """
-        for f in self.files:
+        # for f in self.files:
+        #     data, header = sioread(f)
+
+        #     if channels_to_remove is not None:
+        #         data = np.delete(data, np.s_[channels_to_remove], axis=1)
+
+        #     if destination is not None:
+        #         f = Path(destination) / f.name
+
+        #     np.save(f, data)
+        #     np.save(f.parent / (f.name + "_header"), header)
+        
+        def convert(f):
             data, header = sioread(f)
 
             if channels_to_remove is not None:
@@ -77,6 +90,9 @@ class SIODataHandler:
 
             np.save(f, data)
             np.save(f.parent / (f.name + "_header"), header)
+
+        with Pool(4) as p:
+            p.map(convert, self.files)
 
     @staticmethod
     def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
