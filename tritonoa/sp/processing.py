@@ -24,13 +24,19 @@ class FFTParameters:
 
 
 @dataclass
-class FrequencyParameters:
+class FrequencyPeakFindingParameters:
     """Parameters for finding the frequency of a signal."""
 
-    freq: float
-    fs: float
     lower_bw: float = 1.0
     upper_bw: float = 1.0
+
+
+@dataclass
+class FrequencyParameters:
+    freq: Optional[float] = None
+    fs: Optional[float] = None
+    fvec: Optional[np.ndarray] = None
+    peak_params: Optional[FrequencyPeakFindingParameters] = None
 
 
 def find_freq_bin(
@@ -41,8 +47,8 @@ def find_freq_bin(
     upper/lower bandwidths, returns the index of the frequency bin that
     contains the maximum energy.
     """
-    f_lower = freq_params.freq - freq_params.lower_bw
-    f_upper = freq_params.freq + freq_params.upper_bw
+    f_lower = freq_params.freq - freq_params.peak_params.lower_bw
+    f_upper = freq_params.freq + freq_params.peak_params.upper_bw
     ind = (freq_params.fvec >= f_lower) & (freq_params.fvec < f_upper)
     data = np.abs(X).sum(axis=1) / X.shape[1]
     data[~ind] = -2009
@@ -51,7 +57,6 @@ def find_freq_bin(
 
 def generate_complex_pressure(
     data: np.ndarray,
-    # fs: float,
     num_segments: int,
     freq_params: FrequencyParameters,
     fft_params: FFTParameters,
