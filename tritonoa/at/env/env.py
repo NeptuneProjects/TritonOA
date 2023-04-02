@@ -4,11 +4,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import os
+from pathlib import Path
 from typing import Any, List, Union
 
 from tritonoa.at.env.halfspace import Bottom, Top
 from tritonoa.at.env.ssp import SSPLayer
-import tritonoa.utilities as toautils
 
 
 @dataclass
@@ -22,7 +22,7 @@ class AcousticsToolboxEnvironment(ABC):
 
     def __post_init__(self):
         self.nmedia = len(self.layers)
-        self.tmpdir = toautils.enforce_path_type(self.tmpdir)
+        self.tmpdir = Path(self.tmpdir)
     
     @abstractmethod
     def write_envfil(self) -> Any:

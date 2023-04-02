@@ -8,7 +8,7 @@ from typing import Any, Optional, Union
 import numpy as np
 
 from tritonoa.at.env.array import Receiver, Source
-from tritonoa.signal.sp import pressure_field
+from tritonoa.sp.physics import pressure_field
 
 
 class Modes:

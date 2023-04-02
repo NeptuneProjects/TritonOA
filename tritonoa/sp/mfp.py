@@ -5,7 +5,7 @@ from typing import Callable, Iterable, Union
 
 import numpy as np
 
-from tritonoa.signal.sp import beamformer
+from tritonoa.sp.beamforming import beamformer
 
 
 class MatchedFieldProcessor:
