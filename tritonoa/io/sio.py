@@ -110,7 +110,7 @@ class SIODataHandler:
         # Specify analysis ending datetime
         end = datetime.datetime.strptime(end, "%y%j %H:%M")
         # Create datetime vector referencing base_time
-        dt = tf.create_datetime_vector(base_time, t)
+        dt = tf.create_datetime_vector(t, base_time)
         # Find indeces of analysis data
         idx = tf.get_time_index(dt, start, end)
         # Remove extraneous data
