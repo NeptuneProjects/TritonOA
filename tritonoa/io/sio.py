@@ -73,10 +73,11 @@ class SIODataHandler:
 
         print("Starting process pool:")
         with ProcessPoolExecutor(max_workers=4) as executor:
-            executor.map(
-                load_sio_save_numpy,
-                zip(self.files, repeat(channels_to_remove), repeat(destination)),
-            )
+            # executor.map(
+            #     load_sio_save_numpy,
+            #     zip(self.files, repeat(channels_to_remove), repeat(destination)),
+            # )
+            [executor.submit(load_sio_save_numpy, f, channels_to_remove, destination) for f in self.files]
 
     @staticmethod
     def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
