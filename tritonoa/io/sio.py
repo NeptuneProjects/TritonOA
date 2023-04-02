@@ -4,7 +4,6 @@
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 import datetime
-from itertools import repeat
 from math import ceil, floor
 import os
 from pathlib import Path
@@ -64,20 +63,18 @@ class SIODataHandler:
         self,
         channels_to_remove: Union[int, list[int]] = -1,
         destination: Optional[Union[str, bytes, os.PathLike]] = None,
+        max_workers=8,
     ) -> None:
         """Converts .sio files to .npy files. If channels_to_remove is not
         None, then the specified channels will be removed from the data.
         """
-        # for f in self.files:
-        #     self.load_sio_save_numpy(f, channels_to_remove, destination)
 
-        print("Starting process pool:")
-        with ProcessPoolExecutor(max_workers=4) as executor:
-            # executor.map(
-            #     load_sio_save_numpy,
-            #     zip(self.files, repeat(channels_to_remove), repeat(destination)),
-            # )
-            [executor.submit(load_sio_save_numpy, f, channels_to_remove, destination) for f in self.files]
+        print(f"Starting process pool with {max_workers} workers.")
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            [
+                executor.submit(load_sio_save_numpy, f, channels_to_remove, destination)
+                for f in self.files
+            ]
 
     @staticmethod
     def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
@@ -126,8 +123,11 @@ class SIODataHandler:
         return stream
 
 
-def load_sio_save_numpy(f, channels_to_remove, destination):
-    print("I'm doing something!")
+def load_sio_save_numpy(
+    f: os.PathLike,
+    channels_to_remove: list[int] = None,
+    destination: Union[str, bytes, os.PathLike] = None,
+) -> None:
     data, header = sioread(f)
 
     if channels_to_remove is not None:
@@ -138,7 +138,6 @@ def load_sio_save_numpy(f, channels_to_remove, destination):
 
     np.save(f, data)
     np.save(f.parent / (f.name + "_header"), header)
-    print("I'm done!")
 
 
 def sioread(
