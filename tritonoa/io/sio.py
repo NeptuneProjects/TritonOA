@@ -16,6 +16,7 @@ import numpy as np
 from tritonoa.data import DataStream
 from tritonoa.sp import timefreq as tf
 
+log = logging.getLogger(__name__)
 
 class SIOReadError(Exception):
     pass
@@ -70,7 +71,7 @@ class SIODataHandler:
         None, then the specified channels will be removed from the data.
         """
 
-        logging.info(
+        log.info(
             f"Starting process pool with {max_workers} workers for {len(self.files)} files."
         )
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
@@ -141,7 +142,7 @@ def load_sio_save_numpy(
 
     np.save(f, data)
     np.save(f.parent / (f.name + "_header"), header)
-    logging.info(f"{str(f)} saved to disk.")
+    log.info(f"{str(f)} saved to disk.")
 
 
 def sioread(
