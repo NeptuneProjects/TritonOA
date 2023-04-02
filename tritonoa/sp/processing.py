@@ -43,7 +43,7 @@ def generate_complex_pressure(
     fvec: Optional[np.ndarray] = None,
     noverlap: Optional[int] = None,
     window: Optional[Callable] = None,
-) -> tuple[np.ndarray, float, int]:
+) -> tuple[np.ndarray, np.ndarray]:
     if noverlap is not None:
         raise NotImplementedWarning("Overlapping segments is not implemented yet.")
 
@@ -54,6 +54,7 @@ def generate_complex_pressure(
     samplers_per_segment = data.shape[0] // num_segments
 
     complex_pressure = np.zeros((num_segments, M), dtype=complex)
+    f_hist = np.zeros(num_segments)
     for i in range(num_segments):
         idx_start = i * samplers_per_segment
         idx_end = idx_start + nfft
@@ -65,5 +66,6 @@ def generate_complex_pressure(
         X = fft(segment, n=nfft, axis=0)
         fbin = find_freq_bin(fvec, complex_pressure, freq, lower_bw, upper_bw)
         complex_pressure[i] = X[fbin]
+        f_hist[i] = fvec[fbin]
 
-    return complex_pressure, fvec[fbin], fbin
+    return complex_pressure, f_hist
