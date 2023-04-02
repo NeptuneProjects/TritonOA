@@ -42,7 +42,7 @@ def generate_complex_pressure(
     upper_bw: float = 1.0,
     noverlap: Optional[int] = None,
     window: Optional[Callable] = None,
-) -> np.ndarray:
+) -> tuple[np.ndarray, int]:
     if noverlap is not None:
         raise NotImplementedWarning("Overlapping segments is not implemented yet.")
 
@@ -63,4 +63,4 @@ def generate_complex_pressure(
         fbin = find_freq_bin(fvec, complex_pressure, f0, lower_bw, upper_bw)
         complex_pressure[i] = X[fbin]
 
-    return complex_pressure
+    return complex_pressure, fbin
