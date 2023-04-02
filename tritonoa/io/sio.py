@@ -287,32 +287,3 @@ def sioread(
                 )
 
     return X, header
-
-
-# header = {}
-#         header["ID"] = ID
-#         header["Nr"] = Nr
-#         header["BpR"] = BpR
-#         header["Nc"] = Nc
-#         header["BpS"] = BpS
-#         header["tfReal"] = tfReal
-#         header["SpC"] = SpC
-#         header["RpC"] = RpC
-#         header["SpR"] = SpR
-#         header["fname"] = fname
-#         header["comment"] = comment
-#         header["bs"] = bs
-#         header[
-#             "Description"
-#         ] = """
-#                     ID = ID Number
-#                     Nr = # of Records in File
-#                     BpR = # of Bytes per Record
-#                     Nc = # of channels in File
-#                     BpS = # of Bytes per Sample
-#                     tfReal = 0 - integer, 1 - real
-#                     SpC = # of Samples per Channel
-#                     fname = File name
-#                     comment = Comment String
-#                     bs = Endian check value, should be 32677
-#                     """
