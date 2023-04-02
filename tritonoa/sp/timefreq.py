@@ -18,6 +18,10 @@ def create_datetime_vector(
     return np.array([start + timedelta(seconds=t) for t in time_vector])
 
 
+def frequency_vector(fs: float, nfft: int) -> np.ndarray:
+    return np.linspace(0, fs, nfft)
+
+
 def get_time_index(
     dt: np.ndarray,
     start: Optional[datetime] = None,
