@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from dataclasses import dataclass
 from typing import Callable, Optional
 
 import numpy as np
@@ -13,20 +14,36 @@ class NotImplementedWarning(Warning):
     pass
 
 
+@dataclass
+class FFTParameters:
+    """Parameters for performing an FFT."""
+
+    nfft: int
+    noverlap: int = 0
+    window: Optional[Callable] = None
+
+
+@dataclass
+class FrequencyParameters:
+    """Parameters for finding the frequency of a signal."""
+
+    freq: float
+    fs: float
+    lower_bw: float = 1.0
+    upper_bw: float = 1.0
+
+
 def find_freq_bin(
-    fvec: np.ndarray,
     X: np.ndarray,
-    freq: float,
-    lower_bw: float = 1.0,
-    upper_bw: float = 1.0,
+    freq_params: FrequencyParameters,
 ) -> int:
     """Given a frequency vector, complex data, a target frequency, and
     upper/lower bandwidths, returns the index of the frequency bin that
     contains the maximum energy.
     """
-    f_lower = freq - lower_bw
-    f_upper = freq + upper_bw
-    ind = (fvec >= f_lower) & (fvec < f_upper)
+    f_lower = freq_params.freq - freq_params.lower_bw
+    f_upper = freq_params.freq + freq_params.upper_bw
+    ind = (freq_params.fvec >= f_lower) & (freq_params.fvec < f_upper)
     data = np.abs(X).sum(axis=1) / X.shape[1]
     data[~ind] = -2009
     return np.argmax(data)
@@ -34,25 +51,20 @@ def find_freq_bin(
 
 def generate_complex_pressure(
     data: np.ndarray,
-    fs: float,
+    # fs: float,
     num_segments: int,
-    nfft: int,
-    freq: float,
-    lower_bw: float = 1.0,
-    upper_bw: float = 1.0,
-    fvec: Optional[np.ndarray] = None,
-    noverlap: Optional[int] = None,
-    window: Optional[Callable] = None,
+    freq_params: FrequencyParameters,
+    fft_params: FFTParameters,
 ) -> tuple[np.ndarray, np.ndarray]:
-    if noverlap is not None:
+    if fft_params.noverlap is not None:
         raise NotImplementedWarning("Overlapping segments is not implemented yet.")
 
-    if not fvec:
-        fvec = frequency_vector(fs, nfft)
-
     M = data.shape[1]
-    samplers_per_segment = data.shape[0] // num_segments
+    nfft = fft_params.nfft
+    window = fft_params.window
+    fvec = freq_params.fvec
 
+    samplers_per_segment = data.shape[0] // num_segments
     complex_pressure = np.zeros((num_segments, M), dtype=complex)
     f_hist = np.zeros(num_segments)
     for i in range(num_segments):
@@ -64,7 +76,7 @@ def generate_complex_pressure(
             segment = segment * window(nfft)
 
         X = fft(segment, n=nfft, axis=0)
-        fbin = find_freq_bin(fvec, complex_pressure, freq, lower_bw, upper_bw)
+        fbin = find_freq_bin(fvec, complex_pressure, freq_params)
         complex_pressure[i] = X[fbin]
         f_hist[i] = fvec[fbin]
 
