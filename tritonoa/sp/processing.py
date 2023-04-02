@@ -34,7 +34,7 @@ class FrequencyPeakFindingParameters:
 @dataclass
 class FrequencyParameters:
     freq: Optional[float] = None
-    fs: Optional[float] = None
+    # fs: Optional[float] = None
     fvec: Optional[np.ndarray] = None
     peak_params: Optional[FrequencyPeakFindingParameters] = None
 
@@ -67,7 +67,6 @@ def generate_complex_pressure(
     M = data.shape[1]
     nfft = fft_params.nfft
     window = fft_params.window
-    fvec = freq_params.fvec
 
     samplers_per_segment = data.shape[0] // num_segments
     complex_pressure = np.zeros((num_segments, M), dtype=complex)
@@ -81,8 +80,8 @@ def generate_complex_pressure(
             segment = segment * window(nfft)
 
         X = fft(segment, n=nfft, axis=0)
-        fbin = find_freq_bin(fvec, complex_pressure, freq_params)
+        fbin = find_freq_bin(complex_pressure, freq_params)
         complex_pressure[i] = X[fbin]
-        f_hist[i] = fvec[fbin]
+        f_hist[i] = freq_params.fvec[fbin]
 
     return complex_pressure, f_hist
