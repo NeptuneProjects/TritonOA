@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from dataclasses import dataclass
 import datetime
 from math import ceil, floor
 import os
@@ -19,6 +20,37 @@ class SIOReadWarning(Warning):
     pass
 
 
+@dataclass
+class SIODataHeader:
+    ID: Optional[int] = None
+    Nr: Optional[int] = None
+    BpR: Optional[int] = None
+    Nc: Optional[int] = None
+    BpS: Optional[int] = None
+    tfReal: Optional[int] = None
+    SpC: Optional[int] = None
+    RpC: Optional[int] = None
+    SpR: Optional[int] = None
+    fname: Optional[str] = None
+    comment: Optional[str] = None
+    bs: Optional[int] = None
+
+    @property
+    def Description(self) -> str:
+        return """
+            ID = ID Number
+            Nr = # of Records in File
+            BpR = # of Bytes per Record
+            Nc = # of channels in File
+            BpS = # of Bytes per Sample
+            tfReal = 0 - integer, 1 - real
+            SpC = # of Samples per Channel
+            fname = File name
+            comment = Comment String
+            bs = Endian check value, should be 32677
+            """
+
+
 class SIODataHandler:
     def __init__(self, files: list) -> None:
         self.files = sorted(files)
@@ -27,36 +59,36 @@ class SIODataHandler:
     def load_merged(
         fname: Union[str, bytes, os.PathLike]
     ) -> tuple[np.ndarray, np.ndarray]:
+        """Loads merged numpy data from file and returns data and time."""
         data = np.load(fname)
         return data["X"], data["t"]
 
-    def to_numpy(
+    def convert_sio_to_numpy(
         self,
         channels_to_remove: Union[int, list[int]] = -1,
         destination: Optional[Union[str, bytes, os.PathLike]] = None,
     ) -> None:
         for f in self.files:
             data, header = sioread(f)
+
             if channels_to_remove is not None:
                 data = np.delete(data, np.s_[channels_to_remove], axis=1)
 
             if destination is not None:
-                if isinstance(destination, str):
-                    destination = Path(destination)
-                f = destination / f.name
+                f = Path(destination) / f.name
 
             np.save(f, data)
             np.save(f.parent / (f.name + "_header"), header)
 
     # Merge data according to datetimes
-    def merge(
+    def merge_numpy_files(
         self,
         base_time: str,
         start: str,
         end: str,
         fs: float,
         channels_to_remove: Optional[Union[int, list[int]]] = None,
-        destination: Union[str, bytes, os.PathLike] = "merged.npz",
+        savepath: Optional[Union[str, bytes, os.PathLike]] = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         # Load data from files
         data = []
@@ -83,15 +115,10 @@ class SIODataHandler:
         data = data[idx]
         t = t[idx]
         # Save to file
-        np.savez(destination, X=data, t=t)
+        if savepath is not None:
+            np.savez(savepath, X=data, t=t)
 
         return data, t
-
-
-def convert_sio_to_npy(source: os.PathLike, destination: os.PathLike) -> None:
-    for f in source:
-        X, header = sioread(f)
-        np.savez(destination / f.name, X, header)
 
 
 def sioread(
@@ -178,33 +205,20 @@ def sioread(
         SpR = int(BpR / BpS)  # # of Samples per Record
 
         # Header object, for output
-        header = {}
-        header["ID"] = ID
-        header["Nr"] = Nr
-        header["BpR"] = BpR
-        header["Nc"] = Nc
-        header["BpS"] = BpS
-        header["tfReal"] = tfReal
-        header["SpC"] = SpC
-        header["RpC"] = RpC
-        header["SpR"] = SpR
-        header["fname"] = fname
-        header["comment"] = comment
-        header["bs"] = bs
-        header[
-            "Description"
-        ] = """
-                    ID = ID Number
-                    Nr = # of Records in File
-                    BpR = # of Bytes per Record
-                    Nc = # of channels in File
-                    BpS = # of Bytes per Sample
-                    tfReal = 0 - integer, 1 - real
-                    SpC = # of Samples per Channel
-                    fname = File name
-                    comment = Comment String
-                    bs = Endian check value, should be 32677
-                    """
+        header = SIODataHeader(
+            ID=ID,
+            Nr=Nr,
+            BpR=BpR,
+            Nc=Nc,
+            BpS=BpS,
+            tfReal=tfReal,
+            SpC=SpC,
+            RpC=RpC,
+            SpR=SpR,
+            fname=fname,
+            comment=comment,
+            bs=bs,
+        )
 
         # If either channel or # of samples is 0, then return just header
         if (Ns == 0) or ((len(channels) == 1) and (channels[0] == -1)):
@@ -274,47 +288,31 @@ def sioread(
 
     return X, header
 
-    # class SioStream_:
 
-
-#     """
-#     Written by Hunter Akins, 4 June 2019
-#     data object implementing indexing and return sequential data
-#     Indexing starts out 0, but sioread indexes at 1, so I need to add 1 to all keys
-#     """
-
-#     def __init__(self, fname):
-#         s_start, Ns = 1, 1
-#         inp = {"fname": fname, "s_start": s_start, "Ns": Ns}
-#         [tmp, hdr] = sioread(**inp)
-#         # use header to get Nc and samples per channel
-#         self.Nc = hdr["Nc"]
-#         self.SpC = hdr["SpC"]
-#         self.SpR = hdr["SpR"]
-#         self.inp = inp
-
-#     def __getitem__(self, key):
-#         if isinstance(key, slice):
-#             if key.step is None:
-#                 step = 1
-#             else:
-#                 step = key.step
-#             start = key.start
-#             resid = start % self.SpR
-#             if resid != 0:
-#                 start -= resid
-#                 self.inp["s_start"] = start + 1
-#                 if key.stop is None:
-#                     self.inp["Ns"] = 1
-#                 else:
-#                     self.inp["Ns"] = key.stop - key.start + resid
-#                 [tmp, hdr] = sioread(**self.inp)
-#                 tmp = tmp[resid:]  # truncate the unnecessary read at beg.
-#                 return tmp
-#         self.inp["s_start"] = key.start + 1
-#         if key.stop is None:
-#             self.inp["Ns"] = 1
-#         else:
-#             self.inp["Ns"] = key.stop - key.start
-#         [tmp, hdr] = sioread(**self.inp)
-#         return tmp
+# header = {}
+#         header["ID"] = ID
+#         header["Nr"] = Nr
+#         header["BpR"] = BpR
+#         header["Nc"] = Nc
+#         header["BpS"] = BpS
+#         header["tfReal"] = tfReal
+#         header["SpC"] = SpC
+#         header["RpC"] = RpC
+#         header["SpR"] = SpR
+#         header["fname"] = fname
+#         header["comment"] = comment
+#         header["bs"] = bs
+#         header[
+#             "Description"
+#         ] = """
+#                     ID = ID Number
+#                     Nr = # of Records in File
+#                     BpR = # of Bytes per Record
+#                     Nc = # of channels in File
+#                     BpS = # of Bytes per Sample
+#                     tfReal = 0 - integer, 1 - real
+#                     SpC = # of Samples per Channel
+#                     fname = File name
+#                     comment = Comment String
+#                     bs = Endian check value, should be 32677
+#                     """
