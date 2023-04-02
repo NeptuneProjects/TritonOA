@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 import datetime
+from itertools import repeat
 from math import ceil, floor
-from multiprocessing import Pool
 import os
 from pathlib import Path
 from struct import unpack
@@ -79,7 +80,7 @@ class SIODataHandler:
         #     np.save(f, data)
         #     np.save(f.parent / (f.name + "_header"), header)
         
-        def convert(f):
+        def load_sio_save_numpy(f, channels_to_remove, destination):
             data, header = sioread(f)
 
             if channels_to_remove is not None:
@@ -91,8 +92,8 @@ class SIODataHandler:
             np.save(f, data)
             np.save(f.parent / (f.name + "_header"), header)
 
-        with Pool(4) as p:
-            p.map(convert, self.files)
+        with ProcessPoolExecutor(max_workers=4) as executor:
+            executor.map(load_sio_save_numpy, zip(self.files, repeat(channels_to_remove), repeat(destination)))
 
     @staticmethod
     def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
