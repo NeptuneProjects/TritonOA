@@ -21,7 +21,7 @@ class DataStream:
 
     @staticmethod
     def load(
-        self, filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None
+        filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None
     ) -> None:
         """Loads data from numpy file."""
         data = np.load(filename)
