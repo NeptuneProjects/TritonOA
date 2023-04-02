@@ -4,6 +4,7 @@
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 import datetime
+import logging
 from math import ceil, floor
 import os
 from pathlib import Path
@@ -69,7 +70,7 @@ class SIODataHandler:
         None, then the specified channels will be removed from the data.
         """
 
-        print(
+        logging.info(
             f"Starting process pool with {max_workers} workers for {len(self.files)} files."
         )
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
