@@ -22,6 +22,7 @@ class DataStream:
     def load(self, filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None) -> None:
         """Loads data from numpy file."""
         data = np.load(filename)
+        print(data.__dict__)
         if exclude is None or "X" not in exclude:
             self.X = data.get("X", None)
         if exclude is None or "t" not in exclude:
