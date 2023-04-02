@@ -71,6 +71,7 @@ class SIODataHandler:
         # for f in self.files:
         #     self.load_sio_save_numpy(f, channels_to_remove, destination)
 
+        print("Starting process pool:")
         with ProcessPoolExecutor(max_workers=4) as executor:
             executor.map(
                 self.load_sio_save_numpy,
