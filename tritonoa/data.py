@@ -19,13 +19,17 @@ class DataStream:
         """Returns data and time vector."""
         return self.X, self.t
 
-    def load(self, filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None) -> None:
+    @staticmethod
+    def load(
+        self, filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None
+    ) -> None:
         """Loads data from numpy file."""
         data = np.load(filename)
         if exclude is None or "X" not in exclude:
-            self.X = data.get("X", None)
+            X = data.get("X", None)
         if exclude is None or "t" not in exclude:
-            self.t = data.get("t", None)
+            t = data.get("t", None)
+        return X, t
 
     def save(self, filename: Union[str, bytes, os.PathLike]) -> None:
         """Saves data to numpy file."""
