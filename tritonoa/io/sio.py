@@ -18,6 +18,7 @@ from tritonoa.sp import timefreq as tf
 
 log = logging.getLogger(__name__)
 
+
 class SIOReadError(Exception):
     pass
 
