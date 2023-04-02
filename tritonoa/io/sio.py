@@ -74,7 +74,7 @@ class SIODataHandler:
         print("Starting process pool:")
         with ProcessPoolExecutor(max_workers=4) as executor:
             executor.map(
-                self.load_sio_save_numpy,
+                load_sio_save_numpy,
                 zip(self.files, repeat(channels_to_remove), repeat(destination)),
             )
 
@@ -82,21 +82,6 @@ class SIODataHandler:
     def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
         """Loads merged numpy data from file and returns data and time."""
         return DataStream().load(fname)
-
-    @staticmethod
-    def load_sio_save_numpy(f, channels_to_remove, destination):
-        print("I'm doing something!")
-        data, header = sioread(f)
-
-        if channels_to_remove is not None:
-            data = np.delete(data, np.s_[channels_to_remove], axis=1)
-
-        if destination is not None:
-            f = Path(destination) / f.name
-
-        np.save(f, data)
-        np.save(f.parent / (f.name + "_header"), header)
-        print("I'm done!")
 
     # Merge data according to datetimes
     def merge_numpy_files(
@@ -138,6 +123,21 @@ class SIODataHandler:
             stream.save(savepath)
 
         return stream
+
+
+def load_sio_save_numpy(f, channels_to_remove, destination):
+    print("I'm doing something!")
+    data, header = sioread(f)
+
+    if channels_to_remove is not None:
+        data = np.delete(data, np.s_[channels_to_remove], axis=1)
+
+    if destination is not None:
+        f = Path(destination) / f.name
+
+    np.save(f, data)
+    np.save(f.parent / (f.name + "_header"), header)
+    print("I'm done!")
 
 
 def sioread(
