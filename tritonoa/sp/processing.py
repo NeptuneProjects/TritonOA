@@ -19,7 +19,7 @@ class FFTParameters:
     """Parameters for performing an FFT."""
 
     nfft: int
-    noverlap: int = 0
+    noverlap: Optional[int] = None
     window: Optional[Callable] = None
 
 
