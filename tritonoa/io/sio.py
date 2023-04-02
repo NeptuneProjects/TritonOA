@@ -11,6 +11,8 @@ from typing import Optional, Union
 
 import numpy as np
 
+from tritonoa.data import DataStream
+
 
 class SIOReadError(Exception):
     pass
@@ -55,19 +57,14 @@ class SIODataHandler:
     def __init__(self, files: list) -> None:
         self.files = sorted(files)
 
-    @staticmethod
-    def load_merged(
-        fname: Union[str, bytes, os.PathLike]
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Loads merged numpy data from file and returns data and time."""
-        data = np.load(fname)
-        return data["X"], data["t"]
-
-    def convert_sio_to_numpy(
+    def convert_to_numpy(
         self,
         channels_to_remove: Union[int, list[int]] = -1,
         destination: Optional[Union[str, bytes, os.PathLike]] = None,
     ) -> None:
+        """Converts .sio files to .npy files. If channels_to_remove is not
+        None, then the specified channels will be removed from the data.
+        """
         for f in self.files:
             data, header = sioread(f)
 
@@ -80,6 +77,11 @@ class SIODataHandler:
             np.save(f, data)
             np.save(f.parent / (f.name + "_header"), header)
 
+    @staticmethod
+    def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
+        """Loads merged numpy data from file and returns data and time."""
+        return DataStream().load(fname)
+
     # Merge data according to datetimes
     def merge_numpy_files(
         self,
@@ -89,7 +91,8 @@ class SIODataHandler:
         fs: float,
         channels_to_remove: Optional[Union[int, list[int]]] = None,
         savepath: Optional[Union[str, bytes, os.PathLike]] = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> DataStream:
+        """Loads and merges numpy data from files and returns data and time."""
         # Load data from files
         data = []
         for f in self.files:
@@ -112,13 +115,13 @@ class SIODataHandler:
         # Find indeces of analysis data
         idx = (dt >= start) & (dt < end)
         # Remove extraneous data
-        data = data[idx]
-        t = t[idx]
+        stream = DataStream(data[idx], t[idx])
+
         # Save to file
         if savepath is not None:
-            np.savez(savepath, X=data, t=t)
+            stream.save(savepath)
 
-        return data, t
+        return stream
 
 
 def sioread(
