@@ -15,11 +15,13 @@ class DataStream:
     X: Optional[np.ndarray] = None
     t: Optional[np.ndarray] = None
 
-    def load(self, filename: Union[str, bytes, os.PathLike]) -> None:
+    def load(self, filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None) -> None:
         """Loads data from numpy file."""
         data = np.load(filename)
-        self.X = data.get("X", None)
-        self.t = data.get("t", None)
+        if exclude is None or "X" not in exclude:
+            self.X = data.get("X", None)
+        if exclude is None or "t" not in exclude:
+            self.t = data.get("t", None)
 
     def save(self, filename: Union[str, bytes, os.PathLike]) -> None:
         """Saves data to numpy file."""
