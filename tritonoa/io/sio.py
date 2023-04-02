@@ -12,7 +12,7 @@ from typing import Optional, Union
 import numpy as np
 
 from tritonoa.data import DataStream
-from tritonoa.sp import timeseries as ts
+from tritonoa.sp import timefreq as tf
 
 
 class SIOReadError(Exception):
@@ -104,7 +104,7 @@ class SIODataHandler:
             data = np.delete(data, np.s_[channels_to_remove], axis=1)
 
         # Define time vector [s]
-        t = ts.create_time_vector(data.shape[0], fs)
+        t = tf.create_time_vector(data.shape[0], fs)
         # Specify starting file datetime
         base_time = datetime.datetime.strptime(base_time, "%y%j %H:%M")
         # Specify analysis starting datetime
@@ -112,9 +112,9 @@ class SIODataHandler:
         # Specify analysis ending datetime
         end = datetime.datetime.strptime(end, "%y%j %H:%M")
         # Create datetime vector referencing base_time
-        dt = ts.create_datetime_vector(base_time, t)
+        dt = tf.create_datetime_vector(base_time, t)
         # Find indeces of analysis data
-        idx = ts.get_time_index(dt, start, end)
+        idx = tf.get_time_index(dt, start, end)
         # Remove extraneous data
         stream = DataStream(data[idx], t[idx])
 
