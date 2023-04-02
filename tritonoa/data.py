@@ -24,6 +24,7 @@ class DataStream:
         filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None
     ) -> None:
         """Loads data from numpy file."""
+        X, t = None, None
         data = np.load(filename)
         if exclude is None or "X" not in exclude:
             X = data.get("X", None)
