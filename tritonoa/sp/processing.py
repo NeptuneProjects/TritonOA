@@ -80,7 +80,7 @@ def generate_complex_pressure(
             segment = segment * window(nfft)[:, np.newaxis]
 
         X = fft(segment, n=nfft, axis=0)
-        fbin = find_freq_bin(complex_pressure, freq_params)
+        fbin = find_freq_bin(X, freq_params)
         complex_pressure[i] = X[fbin]
         f_hist[i] = freq_params.fvec[fbin]
 
