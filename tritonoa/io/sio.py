@@ -141,6 +141,7 @@ def load_sio_save_numpy(
 
     np.save(f, data)
     np.save(f.parent / (f.name + "_header"), header)
+    logging.info(f"{str(f)} saved to disk.")
 
 
 def sioread(
