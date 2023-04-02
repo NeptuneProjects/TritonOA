@@ -15,6 +15,10 @@ class DataStream:
     X: Optional[np.ndarray] = None
     t: Optional[np.ndarray] = None
 
+    def __call__(self) -> tuple[np.ndarray, np.ndarray]:
+        """Returns data and time vector."""
+        return self.X, self.t
+
     def load(self, filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None) -> None:
         """Loads data from numpy file."""
         data = np.load(filename)
