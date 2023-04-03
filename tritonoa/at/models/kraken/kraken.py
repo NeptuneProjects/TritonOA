@@ -12,9 +12,6 @@ from tritonoa.at.models.kraken.modes import Modes
 from tritonoa.at.models.model import AcousticsToolboxModel
 
 
-KRAKEN_EXTENSIONS = ["env", "mod", "prt"]
-
-
 @dataclass(kw_only=True)
 class KrakenEnvironment(AcousticsToolboxEnvironment):
     source: Source
@@ -80,4 +77,5 @@ class KrakenModel(AcousticsToolboxModel):
 
 
 def clean_up_kraken_files(path: Union[str, bytes, os.PathLike]) -> None:
+    KRAKEN_EXTENSIONS = ["env", "mod", "prt"]
     [[f.unlink() for f in Path(path).glob(f"*.{ext}")] for ext in KRAKEN_EXTENSIONS]
