@@ -6,6 +6,45 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+def plot_ambiguity_surface(
+    B,
+    rvec,
+    zvec,
+    ax=None,
+    imshow_kwargs={},
+    plot_kwargs={},
+):
+    IMSHOW_DEFAULTS = {
+        "aspect": "auto",
+        "origin": "lower",
+        "interpolation": "none",
+        "cmap": "viridis",
+        "vmin": -10,
+        "vmax": 0,
+    }
+    PLOT_DEFAULTS = {
+        "marker": "*",
+        "markersize": 15,
+        "markeredgewidth": 1.5,
+        "markeredgecolor": "k",
+        "markerfacecolor": "w",
+    }
+
+    if ax is None:
+        ax = plt.gca()
+
+    src_z_ind, src_r_ind = np.unravel_index(np.argmax(B), (len(zvec), len(rvec)))
+
+    im = ax.imshow(
+        B,
+        extent=[min(rvec), max(rvec), min(zvec), max(zvec)],
+        **{**IMSHOW_DEFAULTS, **imshow_kwargs}
+    )
+    ax.plot(rvec[src_r_ind], zvec[src_z_ind], **{**PLOT_DEFAULTS, **plot_kwargs})
+    ax.invert_yaxis()
+    return ax, im
+
+
 def plot_SSP(z, c, boundaries=None, xlabel=None, ylabel=None, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
@@ -61,7 +100,6 @@ def plot_TL_2d(
     ax=None,
     **kwargs
 ):
-
     if ax is None:
         ax = plt.gca()
 
