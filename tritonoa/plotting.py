@@ -45,6 +45,27 @@ def plot_ambiguity_surface(
     return ax, im
 
 
+def plot_spectrogram(
+    Sxx: np.ndarray, t: np.ndarray, f: np.ndarray, ax=None, **kwargs: dict
+) -> tuple(list, list):
+    IMSHOW_DEFAULTS = {
+        "aspect": "auto",
+        "origin": "lower",
+        "interpolation": "none",
+        "cmap": "viridis",
+        "vmin": -40,
+        "vmax": 0,
+    }
+    if ax is None:
+        ax = plt.gca()
+
+    im = plt.imshow(
+        Sxx, extent=[min(t), max(t), min(f), max(f)], **{**IMSHOW_DEFAULTS, **kwargs}
+    )
+    ax.invert_yaxis()
+    return ax, im
+
+
 def plot_SSP(z, c, boundaries=None, xlabel=None, ylabel=None, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
