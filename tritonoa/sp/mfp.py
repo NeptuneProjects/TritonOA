@@ -29,11 +29,8 @@ class MatchedFieldProcessor:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> np.ndarray:
-        import matplotlib.pyplot as plt
         bf_response = []
         for f, k in zip(self.freq, self.covariance_matrix):
-            # plt.imshow(abs(k))
-            # plt.show()
             replica_pressure = self.runner(self.parameters | {"freq": f} | parameters)
             bf_response.append(self.beamformer(k, replica_pressure))
 
