@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Callable, Iterable, Union
+from typing import Iterable, Union
 
 import numpy as np
 
@@ -13,16 +13,16 @@ class MatchedFieldProcessor:
 
     def __init__(
         self,
-        runner: Callable,
+        runner: callable,
         covariance_matrix: Union[np.ndarray, Iterable[np.ndarray]],
         freq: Union[float, Iterable[float]],
-        parameters: dict,
-        beamformer: Callable = beamformer,
+        parameters: Union[dict, list[dict]],
+        beamformer: callable = beamformer,
     ):
         self.runner = runner
         self.covariance_matrix = covariance_matrix
         self.freq = freq
-        self.parameters = parameters
+        self.parameters = self._merge(parameters)
         self.beamformer = beamformer
 
     def __call__(self, parameters: dict) -> Union[np.ndarray, complex]:
@@ -35,3 +35,11 @@ class MatchedFieldProcessor:
             bf_response.append(self.beamformer(k, replica_pressure))
 
         return np.mean(np.array(bf_response), axis=0)
+
+    @staticmethod
+    def _merge(parameters: Union[dict, list[dict]]) -> dict:
+        if isinstance(parameters, list):
+            d = {}
+            [[d.update({k: v}) for k, v in p.items()] for p in parameters]
+            return d
+        return parameters
