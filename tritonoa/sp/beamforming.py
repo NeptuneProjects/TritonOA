@@ -34,12 +34,6 @@ def bf_cbf(K: np.ndarray, w: np.ndarray) -> np.ndarray:
     """
 
     return np.diag(w.conj().T.dot(K).dot(w))
-    # B = np.zeros(w.shape[1], dtype=complex)
-    # for i in range(w.shape[1]):
-    #     B[i] = w[:, i].conj().T.dot(K).dot(w[:, i])
-    # return B
-        
-    # return np.diag(w.conj().T @ K @ w)
 
 
 def bf_mvdr(K: np.ndarray, w: np.ndarray) -> np.ndarray:
