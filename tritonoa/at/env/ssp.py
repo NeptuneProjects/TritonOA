@@ -10,6 +10,7 @@ from tritonoa.ssp import SoundSpeedProfile
 
 @dataclass
 class SoundSpeedProfileAT(SoundSpeedProfile):
+    # TODO: Change `default` to `default_factory`
     rho: np.ndarray = field(default=np.array([1.0], dtype=np.float64))
     c_s: np.ndarray = field(default=np.array([0.0], dtype=np.float64))
     a_p: np.ndarray = field(default=np.array([0.0], dtype=np.float64))
