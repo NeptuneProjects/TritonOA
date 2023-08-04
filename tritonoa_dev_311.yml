@@ -1,0 +1,19 @@
+name: tritonoa_dev_311
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.11
+  - cmocean
+  - feather-format
+  - gsw
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - pandas
+  - pip
+  - scipy
+  - tqdm
+  - pip:
+    # - git+https://github.com/NeptuneProjects/TritonOA.git
+    - pyram
