@@ -158,3 +158,64 @@ def plot_TL_2d(
 
 def plot_TL_1d():
     pass
+
+
+def plot_3d_tilt(
+    array_1: np.ndarray, array_2: np.ndarray, z_pivot: float
+) -> plt.Figure:
+    """Plots the 3D geometry of two arrays.
+
+    Parameters
+    ----------
+    array_1 : np.ndarray
+        Array 1 coordinates (Nx3).
+    array_2 : np.ndarray
+        Array 2 coordinates (Nx3).
+    z_pivot : float
+        Pivot depth [m] for array tilt.
+
+    Returns
+    -------
+    fig : plt.Figure
+        Figure object.
+
+    TODO: Make 2nd array & pivot optional
+    """
+    fig = plt.figure(figsize=(8, 8))
+    ax1 = fig.add_subplot(2, 2, 1, projection="3d")
+    ax1.scatter(array_1[:, 0], array_1[:, 1], array_1[:, 2])
+    ax1.scatter(array_2[:, 0], array_2[:, 1], array_2[:, 2])
+    ax1.invert_zaxis()
+    ax1.set_xlabel("Easting (m)")
+    ax1.set_ylabel("Northing (m)")
+    ax1.set_zlabel("Depth (m)")
+
+    ax2 = fig.add_subplot(2, 2, 2)
+    ax2.scatter(array_1[:, 0], array_1[:, 1])
+    ax2.scatter(array_2[:, 0], array_2[:, 1])
+    ax2.set_xlabel("Easting (m)")
+    ax2.axis("equal")
+    ax2.set_ylabel("Northing (m)")
+    ax2.set_title("X-Y Plane")
+
+    ax3 = fig.add_subplot(2, 2, 3)
+    ax3.scatter(array_1[:, 0], array_1[:, 2])
+    ax3.scatter(array_2[:, 0], array_2[:, 2])
+    ax3.invert_yaxis()
+    ax3.axis("equal")
+    ax3.set_ylim(z_pivot, 0)
+    ax3.set_xlabel("Easting (m)")
+    ax3.set_ylabel("Depth (m)")
+    ax3.set_title("X-Z Plane")
+
+    ax4 = fig.add_subplot(2, 2, 4)
+    ax4.scatter(array_1[:, 1], array_1[:, 2])
+    ax4.scatter(array_2[:, 1], array_2[:, 2])
+    ax4.invert_yaxis()
+    ax4.axis("equal")
+    ax4.set_ylim(z_pivot, 0)
+    ax4.set_xlabel("Northing (m)")
+    ax4.set_ylabel("Depth (m)")
+    ax4.set_title("Y-Z Plane")
+    fig.tight_layout()
+    return fig
