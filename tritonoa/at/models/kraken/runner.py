@@ -43,6 +43,8 @@ def run_kraken(parameters: dict) -> complex:
             z=parameters.get("rec_z"),
             r=parameters.get("rec_r"),
             tilt=parameters.get("tilt", None),
+            azimuth=parameters.get("azimuth", None),
+            z_pivot=parameters.get("z_pivot", None),
         ),
         clow=parameters.get("clow", 1500.0),
         chigh=parameters.get("chigh", 1600.0),
