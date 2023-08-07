@@ -19,7 +19,7 @@ def setup_package():
             "pandas",
             "scipy",
         ],
-        version="0.0.2",
+        version="0.0.3",
         license="MIT",
         description="Package provides interface to ocean acoustic modeling and \
             analysis tools.",
