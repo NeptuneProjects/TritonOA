@@ -200,7 +200,7 @@ def compute_range_offsets(
     rec_r_vec = np.array(
         [np.zeros_like(rec_r_m), rec_r_m]
     ).squeeze()  # Convert to 2D vector
-    tilted_array = Receiver.array_tilt_3D(z, tilt, azimuth, z_pivot, unit=unit)
+    tilted_array = Receiver.array_tilt(z, tilt, azimuth, z_pivot, unit=unit)
     total_range = np.linalg.norm(tilted_array[:, :2] - rec_r_vec, axis=1)
     range_offsets = total_range - rec_r_m
     return range_offsets, tilted_array
