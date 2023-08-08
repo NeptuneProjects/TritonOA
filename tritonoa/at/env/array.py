@@ -142,6 +142,8 @@ class Receiver(Array):
         np.ndarray
             An (Nx3) array specifying a tilted array in 3-D cartesian coordinates.
         """
+        if azimuth is None:
+            azimuth = 0.0
         if z_pivot is None:
             z_pivot = np.max(z)
 
