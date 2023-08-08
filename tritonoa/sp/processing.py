@@ -7,8 +7,6 @@ from typing import Callable, Optional
 import numpy as np
 from scipy.fft import fft
 
-from tritonoa.sp.timefreq import frequency_vector
-
 
 class NotImplementedWarning(Warning):
     pass
@@ -57,22 +55,48 @@ def find_freq_bin(
 
 def generate_complex_pressure(
     data: np.ndarray,
-    num_segments: int,
     freq_params: FrequencyParameters,
     fft_params: FFTParameters,
+    samples_per_segment: int,
+    segments_every_n: Optional[int] = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    if fft_params.noverlap is not None:
-        raise NotImplementedWarning("Overlapping segments is not implemented yet.")
+    """Given a time series, returns the complex pressure and frequency
+    vector.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Time series data with shape (time samples, channels).
+    freq_params : FrequencyParameters
+        Parameters for finding the frequency of a signal.
+    fft_params : FFTParameters
+        Parameters for performing an FFT.
+    samples_per_segment : int
+        Number of samples per segment.
+    segments_every_n : int, optional
+        Number of samples between segments (default: None). If None, will
+        default to samples_per_segment.
+
+    Returns
+    -------
+    np.ndarray
+        Complex pressure at each time step.
+    np.ndarray
+        Array of precise frequency bins used to generate complex pressure.
+    """
+
+    if segments_every_n is None:
+        segments_every_n = samples_per_segment
 
     M = data.shape[1]
     nfft = fft_params.nfft
     window = fft_params.window
+    num_segments = data.shape[0] // segments_every_n
 
-    samplers_per_segment = data.shape[0] // num_segments
     complex_pressure = np.zeros((num_segments, M), dtype=complex)
     f_hist = np.zeros(num_segments)
     for i in range(num_segments):
-        idx_start = i * samplers_per_segment
+        idx_start = i * samples_per_segment
         idx_end = idx_start + nfft
         segment = data[idx_start:idx_end]
 
