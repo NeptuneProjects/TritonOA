@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+import logging
+from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
 from scipy.fft import fft
+from scipy.io import savemat
+from tqdm import tqdm
+from tritonoa.data import DataStream
+from tritonoa.sp.beamforming import covariance
+from tritonoa.sp.timefreq import frequency_vector
+
+log = logging.getLogger(__name__)
 
 
 class NotImplementedWarning(Warning):
@@ -32,9 +42,106 @@ class FrequencyPeakFindingParameters:
 @dataclass
 class FrequencyParameters:
     freq: Optional[float] = None
-    # fs: Optional[float] = None
     fvec: Optional[np.ndarray] = None
     peak_params: Optional[FrequencyPeakFindingParameters] = None
+
+
+class Processor:
+    def __init__(
+        self,
+        data: DataStream,
+        fs: float,
+        freq: list[float],
+        fft_params: FFTParameters,
+        freq_finding_params: FrequencyPeakFindingParameters,
+    ):
+        self.data = data
+        self.fs = fs
+        self.frequencies = list(freq) if isinstance(freq, float) else freq
+        self.fft_params = fft_params
+        self.freq_finding_params = freq_finding_params
+        self.fvec = frequency_vector(fs=self.fs, nfft=self.fft_params.nfft)
+
+    def process(
+        self,
+        samples_per_segment,
+        segments_every_n=None,
+        compute_covariance=True,
+        destination=Path.cwd(),
+        max_workers=8,
+        normalize_covariance=True,
+    ):
+        log.info(f"Processing data for {self.frequencies} Hz.")
+        log.info(
+            f"{self.frequencies} Hz: Loaded data with shape "
+            f"({self.data.num_samples} samples x {self.data.num_channels} channels)"
+        )
+
+        with tqdm(
+            total=len(self.frequencies),
+            desc="Processing frequencies",
+            unit="freq",
+            bar_format="{l_bar}{bar:20}{r_bar}{bar:-20b}",
+        ) as pbar:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [
+                    executor.submit(
+                        self._process_worker,
+                        freq_params=FrequencyParameters(
+                            freq=freq,
+                            fvec=self.fvec,
+                            peak_params=self.freq_finding_params,
+                        ),
+                        destination=destination,
+                        samples_per_segment=samples_per_segment,
+                        segments_every_n=segments_every_n,
+                        compute_covariance=compute_covariance,
+                        normalize_covariance=normalize_covariance,
+                    )
+                    for freq in self.frequencies
+                ]
+                [pbar.update(1) for _ in as_completed(futures)]
+
+        log.info(f"{self.frequencies} Hz: Processing complete.")
+
+    def _process_worker(
+        self,
+        freq_params,
+        destination: Path,
+        samples_per_segment: int,
+        segments_every_n=None,
+        compute_covariance=True,
+        normalize_covariance=True,
+    ) -> None:
+        def _save_data():
+            savepath = destination / f"{freq_params.freq:.1f}Hz"
+            savepath.mkdir(parents=True, exist_ok=True)
+            np.save(savepath / "data.npy", p)
+            np.save(savepath / "f_hist.npy", f_hist)
+            savemat(
+                savepath / f"data_{freq_params.freq}Hz.mat",
+                {"p": p, "f": freq_params.freq},
+            )
+            if compute_covariance:
+                np.save(savepath / "covariance.npy", K)
+                savemat(savepath / "covariance.mat", {"K": K})
+
+        log.info(f"{freq_params.freq} Hz: Computing complex pressure.")
+        p, f_hist = get_complex_pressure(
+            data=self.data.X,
+            freq_params=freq_params,
+            fft_params=self.fft_params,
+            samples_per_segment=samples_per_segment,
+            segments_every_n=segments_every_n,
+        )
+        log.info(f"{freq_params.freq} Hz: Completed computing complex pressure.")
+        log.info(f"{freq_params.freq} Hz: Computing covariance matrices.")
+        if compute_covariance:
+            K = get_covariance(p, normalize=normalize_covariance)
+        log.info(f"{freq_params.freq} Hz: Completed computing covariance matrices.")
+        log.info(f"{freq_params.freq} Hz: Saving data.")
+        _save_data()
+        log.info(f"{freq_params.freq} Hz: Data saved.")
 
 
 def find_freq_bin(
@@ -53,7 +160,7 @@ def find_freq_bin(
     return np.argmax(data)
 
 
-def generate_complex_pressure(
+def get_complex_pressure(
     data: np.ndarray,
     freq_params: FrequencyParameters,
     fft_params: FFTParameters,
@@ -87,17 +194,15 @@ def generate_complex_pressure(
 
     if segments_every_n is None:
         segments_every_n = samples_per_segment
-
-    M = data.shape[1]
+    num_segments = data.shape[0] // segments_every_n
     nfft = fft_params.nfft
     window = fft_params.window
-    num_segments = data.shape[0] // segments_every_n
 
-    complex_pressure = np.zeros((num_segments, M), dtype=complex)
+    complex_pressure = np.zeros((num_segments, data.shape[1]), dtype=complex)
     f_hist = np.zeros(num_segments)
     for i in range(num_segments):
-        idx_start = i * samples_per_segment
-        idx_end = idx_start + nfft
+        idx_start = i * segments_every_n
+        idx_end = idx_start + samples_per_segment
         segment = data[idx_start:idx_end]
 
         if window is not None:
@@ -109,3 +214,13 @@ def generate_complex_pressure(
         f_hist[i] = freq_params.fvec[fbin]
 
     return complex_pressure, f_hist
+
+
+def get_covariance(data: np.ndarray, normalize: bool = True) -> np.ndarray:
+    K = np.zeros((data.shape[0], data.shape[1], data.shape[1]), dtype=complex)
+    for i in range(data.shape[0]):
+        d = np.expand_dims(data[i], axis=1)
+        if normalize:
+            d /= np.linalg.norm(d)
+        K[i] = covariance(d)
+    return K
