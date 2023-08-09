@@ -18,6 +18,7 @@ def setup_package():
             "numpy",
             "pandas",
             "scipy",
+            "tqdm"
         ],
         version="0.0.4",
         license="MIT",
