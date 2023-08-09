@@ -8,6 +8,10 @@ from typing import Any, Optional, Protocol, Union
 import numpy as np
 
 
+class NoDataWarning(Warning):
+    pass
+
+
 @dataclass
 class DataStream:
     """Contains acoustic data and time vector."""
@@ -15,25 +19,40 @@ class DataStream:
     X: Optional[np.ndarray] = None
     t: Optional[np.ndarray] = None
 
-    def __call__(self) -> tuple[np.ndarray, np.ndarray]:
-        """Returns data and time vector."""
-        return self.X, self.t
+    def __getitem__(self, index: Union[int, slice]) -> tuple[np.ndarray, np.ndarray]:
+        """Returns data and time vector sliced by time index."""
+        return self.X[index], self.t[index]
 
-    @staticmethod
     def load(
-        filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None
+        self, filename: Union[str, bytes, os.PathLike], exclude: Optional[str] = None
     ) -> None:
         """Loads data from numpy file."""
-        X, t = None, None
         data = np.load(filename)
         if exclude is None or "X" not in exclude:
-            X = data.get("X", None)
+            self.X = data.get("X", None)
         if exclude is None or "t" not in exclude:
-            t = data.get("t", None)
-        return X, t
+            self.t = data.get("t", None)
+
+    @property
+    def num_channels(self) -> int:
+        """Returns number of channels in data."""
+        if self.X is None:
+            return NoDataWarning("No data in variable 'X'.")
+        return self.X.shape[1]
+
+    @property
+    def num_samples(self) -> int:
+        """Returns number of samples in data."""
+        if self.X is None:
+            return NoDataWarning("No data in variable 'X'.")
+        return self.X.shape[0]
 
     def save(self, filename: Union[str, bytes, os.PathLike]) -> None:
         """Saves data to numpy file."""
+        if self.X is None:
+            NoDataWarning("No data in variable 'X' to save.")
+        if self.t is None:
+            NoDataWarning("No data in variable 't' to save.")
         np.savez(filename, X=self.X, t=self.t)
 
 
