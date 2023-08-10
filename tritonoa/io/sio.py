@@ -12,8 +12,8 @@ from struct import unpack
 from typing import Optional, Union
 
 import numpy as np
-
-from tritonoa.data import DataStream
+from scipy.io import savemat
+from tritonoa.data import DataFormat, DataStream
 from tritonoa.sp import timefreq as tf
 
 log = logging.getLogger(__name__)
@@ -62,14 +62,29 @@ class SIODataHandler:
     def __init__(self, files: list) -> None:
         self.files = sorted(files)
 
-    def convert_to_numpy(
+    def convert(
         self,
+        fmt: Union[str, list[str]] = ["npy", "mat"],
         channels_to_remove: Union[int, list[int]] = -1,
         destination: Optional[Union[str, bytes, os.PathLike]] = None,
         max_workers=8,
     ) -> None:
-        """Converts .sio files to .npy files. If channels_to_remove is not
-        None, then the specified channels will be removed from the data.
+        """Converts .sio files to [.npy, .mat] files. If channels_to_remove
+        is not None, then the specified channels will be removed from the data.
+
+        Parameters
+        ----------
+        fmt : str or list[str], default=['npy', 'mat']
+            Format to convert data to. Can be 'npy' or 'mat'.
+        channels_to_remove : int or list[int], default=-1
+            Channels to remove from data. If None, then no channels are removed.
+        destination : str or bytes or os.PathLike, default=None
+            Destination to save converted files. If None, then files are saved
+            in the same directory as the original files.
+
+        Returns
+        -------
+        None
         """
 
         log.info(
@@ -77,13 +92,26 @@ class SIODataHandler:
         )
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             [
-                executor.submit(load_sio_save_numpy, f, channels_to_remove, destination)
+                executor.submit(
+                    load_sio_save_fmt, f, fmt, channels_to_remove, destination
+                )
                 for f in self.files
             ]
 
     @staticmethod
     def load_merged(fname: Union[str, bytes, os.PathLike]) -> DataStream:
-        """Loads merged numpy data from file and returns data and time."""
+        """Loads merged numpy data from file and returns data and time.
+
+        Parameters
+        ----------
+        fname : str or bytes or os.PathLike
+            Name/path to .npy data file to be read.
+
+        Returns
+        -------
+        DataStream
+            Data and time vector.
+        """
         return DataStream().load(fname)
 
     # Merge data according to datetimes
@@ -96,7 +124,28 @@ class SIODataHandler:
         channels_to_remove: Optional[Union[int, list[int]]] = None,
         savepath: Optional[Union[str, bytes, os.PathLike]] = None,
     ) -> DataStream:
-        """Loads and merges numpy data from files and returns data and time."""
+        """Loads and merges numpy data from files and returns data and time.
+
+        Parameters
+        ----------
+        base_time : str
+            Starting datetime of first file in format 'yj HH:MM'.
+        start : str
+            Starting datetime of analysis in format 'yj HH:MM'.
+        end : str
+            Ending datetime of analysis in format 'yj HH:MM'.
+        fs : float
+            Sampling frequency.
+        channels_to_remove : int or list[int], default=None
+            Channels to remove from data. If None, then no channels are removed.
+        savepath : str or bytes or os.PathLike, default=None
+            Destination to save merged data. If None, then data is not saved.
+
+        Returns
+        -------
+        DataStream
+            Data and time vector.
+        """
         # Load data from files
         data = []
         for f in self.files:
@@ -128,22 +177,59 @@ class SIODataHandler:
         return stream
 
 
-def load_sio_save_numpy(
+def load_sio_save_fmt(
     f: os.PathLike,
+    fmt: Union[str, list[str]] = ["npy", "mat"],
     channels_to_remove: list[int] = None,
     destination: Union[str, bytes, os.PathLike] = None,
 ) -> None:
+    """Loads .sio file and saves data in numpy format. If channels_to_remove
+    is not None, then the specified channels will be removed from the data.
+
+    Parameters
+    ----------
+    f : str or bytes or os.PathLike
+        Name/path to .sio data file to be read.
+    fmt : str or list[str], default=['npy', 'mat']
+        Format to convert data to. Can be 'npy' or 'mat'.
+    channels_to_remove : int or list[int], default=None
+        Channels to remove from data. If None, then no channels are removed.
+    destination : str or bytes or os.PathLike, default=None
+        Destination to save converted files. If None, then files are saved
+        in the same directory as the original files.
+
+    Returns
+    -------
+    None
+    """
+
+    def _save_npy():
+        savepath = saveroot / DataFormat.NPY.value / f.name
+        np.save(savepath, data)
+        np.save(savepath / (f.name + "_header"), header)
+        log.info(f"{str(f)} saved to disk  in numpy format.")
+
+    def _save_mat():
+        savepath = saveroot / DataFormat.MAT.value / f.name
+        savemat(savepath, {"X": data, "header": header})
+        log.info(f"{str(f)} saved to disk  in numpy format.")
+
+    fmt = [fmt] if isinstance(fmt, str) else fmt
+
     data, header = sioread(f)
 
     if channels_to_remove is not None:
         data = np.delete(data, np.s_[channels_to_remove], axis=1)
 
     if destination is not None:
-        f = Path(destination) / f.name
+        saveroot = Path(destination)
+    else:
+        saveroot = Path(f).parent
 
-    np.save(f, data)
-    np.save(f.parent / (f.name + "_header"), header)
-    log.info(f"{str(f)} saved to disk.")
+    if DataFormat.NPY.value in fmt:
+        _save_npy()
+    if DataFormat.MAT.value in fmt:
+        _save_mat()
 
 
 def sioread(
