@@ -182,16 +182,11 @@ def average_covariance(K: np.ndarray, covariance_averaging: int) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Averaged covariance matrix with shape (time samples, channels, channels).
+        Averaged covariance matrix with shape
+        (time samples - covariance_averaging + 1, channels, channels).
     """
-    num_avg_segments = np.ceil(K.shape[0] // covariance_averaging).astype(int)
-    K_split = np.array_split(K, num_avg_segments, axis=0)
-
-    K_avg = np.zeros((num_avg_segments, K.shape[1], K.shape[2]), dtype=complex)
-    for i, K_sub in enumerate(K_split):
-        K_avg[i] = np.mean(K_sub, axis=0)
-
-    return K_avg
+    view = np.lib.stride_tricks.sliding_window_view(K, covariance_averaging, axis=0)
+    return np.mean(view, axis=-1)
 
 
 def find_freq_bin(
