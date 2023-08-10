@@ -41,12 +41,31 @@ class FrequencyPeakFindingParameters:
 
 @dataclass
 class FrequencyParameters:
+    """Parameters for defining and finding frequency of a signal."""
+
     freq: Optional[float] = None
     fvec: Optional[np.ndarray] = None
     peak_params: Optional[FrequencyPeakFindingParameters] = None
 
 
 class Processor:
+    """Processor for computing complex pressure and covariance matrices
+    for a given set of frequencies.
+
+    Parameters
+    ----------
+    data : DataStream
+        Data stream to process.
+    fs : float
+        Sampling frequency.
+    freq : list[float]
+        List of frequencies to process.
+    fft_params : FFTParameters
+        Parameters for performing an FFT.
+    freq_finding_params : FrequencyPeakFindingParameters
+        Parameters for finding the frequency of a signal.
+    """
+
     def __init__(
         self,
         data: DataStream,
@@ -70,6 +89,7 @@ class Processor:
         destination=Path.cwd(),
         max_workers=8,
         normalize_covariance=True,
+        covariance_averaging=None,
     ):
         log.info(f"Processing data for {self.frequencies} Hz.")
         log.info(
@@ -97,6 +117,7 @@ class Processor:
                         segments_every_n=segments_every_n,
                         compute_covariance=compute_covariance,
                         normalize_covariance=normalize_covariance,
+                        covariance_averaging=covariance_averaging,
                     )
                     for freq in self.frequencies
                 ]
@@ -112,6 +133,7 @@ class Processor:
         segments_every_n=None,
         compute_covariance=True,
         normalize_covariance=True,
+        covariance_averaging=None,
     ) -> None:
         def _save_data():
             savepath = destination / f"{freq_params.freq:.1f}Hz"
@@ -138,10 +160,38 @@ class Processor:
         log.info(f"{freq_params.freq} Hz: Computing covariance matrices.")
         if compute_covariance:
             K = get_covariance(p, normalize=normalize_covariance)
+            if covariance_averaging is not None:
+                K = average_covariance(K, covariance_averaging=covariance_averaging)
         log.info(f"{freq_params.freq} Hz: Completed computing covariance matrices.")
         log.info(f"{freq_params.freq} Hz: Saving data.")
         _save_data()
         log.info(f"{freq_params.freq} Hz: Data saved.")
+
+
+def average_covariance(K: np.ndarray, covariance_averaging: int) -> np.ndarray:
+    """Given a covariance matrix, averages the covariance matrix over
+    segments of the time series.
+
+    Parameters
+    ----------
+    K : np.ndarray
+        Covariance matrix with shape (time samples, channels, channels).
+    covariance_averaging : int
+        Number of segments to average over.
+
+    Returns
+    -------
+    np.ndarray
+        Averaged covariance matrix with shape (time samples, channels, channels).
+    """
+    num_avg_segments = np.ceil(K.shape[0] // covariance_averaging).astype(int)
+    K_split = np.array_split(K, num_avg_segments, axis=0)
+
+    K_avg = np.zeros((num_avg_segments, K.shape[1], K.shape[2]), dtype=complex)
+    for i, K_sub in enumerate(K_split):
+        K_avg[i] = np.mean(K_sub, axis=0)
+
+    return K_avg
 
 
 def find_freq_bin(
@@ -151,6 +201,18 @@ def find_freq_bin(
     """Given a frequency vector, complex data, a target frequency, and
     upper/lower bandwidths, returns the index of the frequency bin that
     contains the maximum energy.
+
+    Parameters
+    ----------
+    X : np.ndarray
+        Complex data with shape (frequency bins, channels).
+    freq_params : FrequencyParameters
+        Parameters for finding the frequency of a signal.
+
+    Returns
+    -------
+    int
+        Index of the frequency bin that contains the maximum energy.
     """
     f_lower = freq_params.freq - freq_params.peak_params.lower_bw
     f_upper = freq_params.freq + freq_params.peak_params.upper_bw
@@ -217,6 +279,21 @@ def get_complex_pressure(
 
 
 def get_covariance(data: np.ndarray, normalize: bool = True) -> np.ndarray:
+    """Given a complex pressure time series, returns the covariance matrix
+    for each time step.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Complex pressure time series with shape (time samples, channels).
+    normalize : bool, optional
+        If True, normalizes the complex pressure time series (default: True).
+
+    Returns
+    -------
+    np.ndarray
+        Covariance matrix with shape (time samples, channels, channels).
+    """
     K = np.zeros((data.shape[0], data.shape[1], data.shape[1]), dtype=complex)
     for i in range(data.shape[0]):
         d = np.expand_dims(data[i], axis=1)
