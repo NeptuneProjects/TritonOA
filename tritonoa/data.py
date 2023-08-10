@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
+from enum import Enum
 import os
 from typing import Any, Optional, Protocol, Union
 
@@ -10,6 +11,30 @@ import numpy as np
 
 class NoDataWarning(Warning):
     pass
+
+
+class DataFormat(Enum):
+    """Data format."""
+
+    CSV = "csv"
+    MAT = "mat"
+    NPY = "npy"
+    NPZ = "npz"
+    WAV = "wav"
+
+
+class DataHandler(Protocol):
+    def convert(self) -> Any:
+        """Converts data to specified formats."""
+        ...
+
+    def load_merged(self) -> Any:
+        """Loads merged numpy file."""
+        ...
+
+    def merge_numpy_files(self) -> Any:
+        """Merges numpy files."""
+        ...
 
 
 @dataclass
@@ -54,17 +79,3 @@ class DataStream:
         if self.t is None:
             NoDataWarning("No data in variable 't' to save.")
         np.savez(filename, X=self.X, t=self.t)
-
-
-class DataHandler(Protocol):
-    def convert_to_numpy(self) -> Any:
-        """Converts data to numpy arrays."""
-        ...
-
-    def load_merged(self) -> Any:
-        """Loads merged numpy file."""
-        ...
-
-    def merge_numpy_files(self) -> Any:
-        """Merges numpy files."""
-        ...
