@@ -4,6 +4,7 @@
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 import datetime
+import json
 import logging
 from math import ceil, floor
 import os
@@ -12,7 +13,7 @@ from struct import unpack
 from typing import Optional, Union
 
 import numpy as np
-from scipy.io import savemat
+from scipy.io import savemat, wavfile
 from tritonoa.data import DataFormat, DataStream
 from tritonoa.sp import timefreq as tf
 
@@ -43,7 +44,7 @@ class SIODataHeader:
     bs: Optional[int] = None
 
     @property
-    def Description(self) -> str:
+    def __description(self) -> str:
         return """
             ID = ID Number
             Nr = # of Records in File
@@ -67,7 +68,8 @@ class SIODataHandler:
         fmt: Union[str, list[str]] = ["npy", "mat"],
         channels_to_remove: Union[int, list[int]] = -1,
         destination: Optional[Union[str, bytes, os.PathLike]] = None,
-        max_workers=8,
+        max_workers: int = 8,
+        fs: float = None,
     ) -> None:
         """Converts .sio files to [.npy, .mat] files. If channels_to_remove
         is not None, then the specified channels will be removed from the data.
@@ -81,6 +83,10 @@ class SIODataHandler:
         destination : str or bytes or os.PathLike, default=None
             Destination to save converted files. If None, then files are saved
             in the same directory as the original files.
+        max_workers : int, default=8
+            Number of workers to use in process pool.
+        fs : float, default=None
+            Sampling frequency in Hz. Required for converting to .wav format.
 
         Returns
         -------
@@ -93,7 +99,7 @@ class SIODataHandler:
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             [
                 executor.submit(
-                    load_sio_save_fmt, f, fmt, channels_to_remove, destination
+                    load_sio_save_fmt, f, fmt, channels_to_remove, destination, fs
                 )
                 for f in self.files
             ]
@@ -114,7 +120,6 @@ class SIODataHandler:
         """
         return DataStream().load(fname)
 
-    # Merge data according to datetimes
     def merge_numpy_files(
         self,
         base_time: str,
@@ -182,6 +187,7 @@ def load_sio_save_fmt(
     fmt: Union[str, list[str]] = ["npy", "mat"],
     channels_to_remove: list[int] = None,
     destination: Union[str, bytes, os.PathLike] = None,
+    fs: float = None,
 ) -> None:
     """Loads .sio file and saves data in numpy format. If channels_to_remove
     is not None, then the specified channels will be removed from the data.
@@ -197,22 +203,36 @@ def load_sio_save_fmt(
     destination : str or bytes or os.PathLike, default=None
         Destination to save converted files. If None, then files are saved
         in the same directory as the original files.
+    fs : float, default=None
+        Sampling frequency in Hz. Required for converting to .wav format.
 
     Returns
     -------
     None
     """
 
-    def _save_npy():
-        savepath = saveroot / DataFormat.NPY.value / f.name
-        np.save(savepath, data)
-        np.save(savepath / (f.name + "_header"), header)
-        log.info(f"{str(f)} saved to disk  in numpy format.")
-
     def _save_mat():
-        savepath = saveroot / DataFormat.MAT.value / f.name
-        savemat(savepath, {"X": data, "header": header})
-        log.info(f"{str(f)} saved to disk  in numpy format.")
+        savepath = saveroot / DataFormat.MAT.value
+        savepath.mkdir(parents=True, exist_ok=True)
+        savemat(savepath / (f.name + ".mat"), {"X": data})
+        with open(savepath / (f.name + "_header.json"), "w") as fp:
+            json.dump(header.__dict__, fp, indent=4)
+        log.info(f"{str(f)} saved to disk  in .mat format.")
+
+    def _save_npy():
+        savepath = saveroot / DataFormat.NPY.value
+        savepath.mkdir(parents=True, exist_ok=True)
+        np.save(savepath / f.name, data)
+        with open(savepath / (f.name + "_header.json"), "w") as fp:
+            json.dump(header.__dict__, fp, indent=4)
+        log.info(f"{str(f)} saved to disk  in .npy format.")
+
+    def _save_wav():
+        savepath = saveroot / DataFormat.WAV.value
+        savepath.mkdir(parents=True, exist_ok=True)
+        wavfile.write(savepath / (f.name + ".wav"), fs, data)
+        log.info(f"{str(f)} saved to disk  in .wav format.")
+
 
     fmt = [fmt] if isinstance(fmt, str) else fmt
 
@@ -226,10 +246,12 @@ def load_sio_save_fmt(
     else:
         saveroot = Path(f).parent
 
-    if DataFormat.NPY.value in fmt:
-        _save_npy()
     if DataFormat.MAT.value in fmt:
         _save_mat()
+    if DataFormat.NPY.value in fmt:
+        _save_npy()
+    if DataFormat.WAV.value in fmt:
+        _save_wav()
 
 
 def sioread(
@@ -309,9 +331,8 @@ def sioread(
         tfReal = unpack(endian + "I", f.read(4))[0]  # 0 = integer, 1 = real
         SpC = unpack(endian + "I", f.read(4))[0]  # # of Samples per Channel
         bs = unpack(endian + "I", f.read(4))[0]  # should be 32677
-        fname = unpack("24s", f.read(24))  # File name
-        comment = unpack("72s", f.read(72))  # Comment String
-
+        fname = unpack("24s", f.read(24))[0].decode()  # File name
+        comment = unpack("72s", f.read(72))[0].decode()  # Comment String
         RpC = ceil(Nr / Nc)  # # of Records per Channel
         SpR = int(BpR / BpS)  # # of Samples per Record
 
