@@ -198,13 +198,36 @@ def compute_range_offsets(
     if z_pivot is None:
         z_pivot = np.max(z)
 
-    rec_r_m = rec_r * 1000.0  # Convert from km to m
+    # rec_r_m = rec_r * 1000.0  # Convert from km to m
+    # rec_r_vec = np.array(
+    #     [np.zeros_like(rec_r_m), rec_r_m]
+    # ).squeeze()  # Convert to 2D vector
+    # tilted_array = Receiver.array_tilt(z, tilt, azimuth, z_pivot, unit=unit)
+    # tilted_array_slice = tilted_array[:, :2]
+    # total_range = np.linalg.norm(tilted_array[:, :2] - rec_r_vec.T, axis=1)
+    # range_offsets = total_range - rec_r_m
+
+
+    rec_r_m = rec_r * 1000 # Convert from km to m
     rec_r_vec = np.array(
         [np.zeros_like(rec_r_m), rec_r_m]
-    ).squeeze()  # Convert to 2D vector
-    tilted_array = Receiver.array_tilt(z, tilt, azimuth, z_pivot, unit=unit)
-    total_range = np.linalg.norm(tilted_array[:, :2] - rec_r_vec, axis=1)
-    range_offsets = total_range - rec_r_m
+    ).squeeze() # Convert to 2D vector
+    N = len(rec_r_m)
+
+    tilted_array = Receiver.array_tilt(z, tilt, azimuth, z_pivot, unit)
+    tilted_array_slice = tilted_array[:, :2] # Slice off z-axis
+    M = len(tilted_array)
+
+    # Vectorize for broadcasting
+    tilted_array_slice = tilted_array_slice[:, :, np.newaxis]
+    tilted_array_slice = np.tile(tilted_array_slice, (1, 1, N)).squeeze()
+    rec_r_vec = rec_r_vec[np.newaxis, :]
+    rec_r_vec = np.tile(rec_r_vec, (M, 1, 1)).squeeze()
+
+    # Compute range offsets
+    total_range = np.linalg.norm(tilted_array_slice - rec_r_vec, axis=1)
+    range_offsets = total_range - np.tile(rec_r_m, (M, 1)).squeeze()
+
     return range_offsets, tilted_array
 
 
