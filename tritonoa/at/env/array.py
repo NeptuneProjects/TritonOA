@@ -84,13 +84,6 @@ class Receiver(Array):
         if self.tilt or self.r_offsets is not None:
             self.apply_array_tilt()
 
-    # def apply_array_tilt(self) -> None:
-    #     self.r_offsets = (
-    #         self.r_offsets
-    #         if self.tilt is None
-    #         else np.atleast_2d(self.array_tilt(self.z, self.tilt)).T
-    #     )
-
     def apply_array_tilt(self) -> None:
         if self.tilt is None:
             self.r_offsets = self.r_offsets
@@ -106,12 +99,6 @@ class Receiver(Array):
         self.r_min = np.min(self.r)
         self.r_max = np.max(self.r)
         self.nr = len(self.r)
-
-    # @staticmethod
-    # def array_tilt(
-    #     z: Union[float, np.ndarray], tilt: float
-    # ) -> Union[float, np.ndarray]:
-    #     return (z.max() - z) * np.sin(tilt * np.pi / 180)
 
     @staticmethod
     def array_tilt(
@@ -192,30 +179,20 @@ def compute_range_offsets(
     range_offsets : np.ndarray
         Vector of range offsets [m] for each receiver element.
     tilted_array : np.ndarray
-        An (Nx3) array specifying a tilted array in 3-D cartesian coordinates.        
+        An (Nx3) array specifying a tilted array in 3-D cartesian coordinates.
     """
 
     if z_pivot is None:
         z_pivot = np.max(z)
 
-    # rec_r_m = rec_r * 1000.0  # Convert from km to m
-    # rec_r_vec = np.array(
-    #     [np.zeros_like(rec_r_m), rec_r_m]
-    # ).squeeze()  # Convert to 2D vector
-    # tilted_array = Receiver.array_tilt(z, tilt, azimuth, z_pivot, unit=unit)
-    # tilted_array_slice = tilted_array[:, :2]
-    # total_range = np.linalg.norm(tilted_array[:, :2] - rec_r_vec.T, axis=1)
-    # range_offsets = total_range - rec_r_m
-
-
-    rec_r_m = rec_r * 1000 # Convert from km to m
+    rec_r_m = rec_r * 1000  # Convert from km to m
     rec_r_vec = np.array(
         [np.zeros_like(rec_r_m), rec_r_m]
-    ).squeeze() # Convert to 2D vector
+    ).squeeze()  # Convert to 2D vector
     N = len(rec_r_m)
 
     tilted_array = Receiver.array_tilt(z, tilt, azimuth, z_pivot, unit)
-    tilted_array_slice = tilted_array[:, :2] # Slice off z-axis
+    tilted_array_slice = tilted_array[:, :2]  # Slice off z-axis
     M = len(tilted_array)
 
     # Vectorize for broadcasting
@@ -242,7 +219,7 @@ def rotate_array_3D(theta: float, array: np.ndarray, unit: str = "deg") -> np.nd
         An (Nx3) array specifying a tilted array in 3-D coordinates.
     unit : str, default="deg"
         Unit of angle ("deg" or "rad")
-    
+
     Returns
     -------
     np.ndarray
@@ -261,7 +238,7 @@ def rotation_matrix_3D(theta: float, unit: str = "deg") -> np.ndarray:
         Rotation angle [deg or rad].
     unit : str, default="deg"
         Unit of angle ("deg" or "rad")
-    
+
     Returns
     -------
     np.ndarray
