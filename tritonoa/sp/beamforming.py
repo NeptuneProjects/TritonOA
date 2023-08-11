@@ -36,6 +36,38 @@ def bf_cbf(K: np.ndarray, w: np.ndarray) -> np.ndarray:
     return np.diag(w.conj().T.dot(K).dot(w))
 
 
+def bf_cbf_ml(K: np.ndarray, w: np.ndarray):
+    """Returns Bartlett processor (e.g., for beamforming or matched
+    field processing).
+
+    Parameters
+    ----------
+    K : np.ndarray (M x M)
+        Covariance matrix of received complex pressure field measured at
+        M points.
+
+    w : np.ndarray (M (x N))
+        Vector containing N replica complex pressure field simulated at
+        M points.
+
+    Returns
+    -------
+    np.ndarray (1 x N)
+        Output of the Bartlett processor for N replicas.
+
+    Notes
+    -----
+    This function implements equation 10.21 from [1], with K defined by
+    equation 10.20 and w defined by equation 10.61.
+
+    [1] Finn B. Jensen, William A. Kuperman, Michael B. Porter, and
+    Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
+    Springer Publishing Company, Incorporated.
+    """
+
+    return np.diag(np.trace(K) - w.conj().T.dot(K).dot(w))
+
+
 def bf_mvdr(K: np.ndarray, w: np.ndarray) -> np.ndarray:
     """Returns MVDR processor (e.g., for beamforming or matched
     field processing).
@@ -88,6 +120,8 @@ def beamformer(
 
     if atype == "cbf":
         B = bf_cbf(K, w)
+    elif atype == "cbf_ml":
+        B = bf_cbf_ml(K, w)
     elif atype == "mvdr":
         B = bf_mvdr(K, w)
     elif atype == "music":
