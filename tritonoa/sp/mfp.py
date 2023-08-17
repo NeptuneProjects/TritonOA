@@ -42,6 +42,7 @@ class MatchedFieldProcessor:
 
     def evaluate(self, parameters: dict) -> np.ndarray:
         bf_response = []
+        # TODO: Implement parallel processing for this loop
         for f, k in zip(self.freq, self.covariance_matrix):
             replica_pressure = self.runner(self.parameters | {"freq": f} | parameters)
             bf_response.append(self.beamformer(k, replica_pressure))
