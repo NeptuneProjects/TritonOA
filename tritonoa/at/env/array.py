@@ -189,7 +189,7 @@ def compute_range_offsets(
     rec_r_vec = np.array(
         [np.zeros_like(rec_r_m), rec_r_m]
     ).squeeze()  # Convert to 2D vector
-    N = len(rec_r_m)
+    N = len(np.atleast_1d(rec_r_m))
 
     tilted_array = Receiver.array_tilt(z, tilt, azimuth, z_pivot, unit)
     tilted_array_slice = tilted_array[:, :2]  # Slice off z-axis
