@@ -4,7 +4,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from enum import Enum
-from typing import Iterable, Union
+from typing import Callable, Iterable, Union
 
 import numpy as np
 
@@ -71,6 +71,10 @@ class MatchedFieldProcessor:
             return np.sum(np.array(bf_response), axis=0)
         elif self.multifreq_method == MultiFrequencyMethods.PRODUCT:
             return np.prod(np.array(bf_response), axis=0)
+    
+    @staticmethod
+    def _evaluate_frequency(parameters: dict, runner: Callable, beamformer: Callable):
+        return beamformer(r_hat=runner(parameters))
 
     @staticmethod
     def _merge(parameters: Union[dict, list[dict]]) -> dict:
