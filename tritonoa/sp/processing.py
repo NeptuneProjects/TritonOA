@@ -268,7 +268,9 @@ def get_complex_pressure(
         segment = data[idx_start:idx_end]
 
         if window is not None:
-            segment = segment * window(nfft)[:, np.newaxis]
+            segment = segment * np.tile(
+                window(segment.shape[0])[:, np.newaxis], (1, segment.shape[1])
+            )
 
         X = fft(segment, n=nfft, axis=0)
         fbin = find_freq_bin(X, freq_params)
