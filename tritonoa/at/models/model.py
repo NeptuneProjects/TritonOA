@@ -34,23 +34,34 @@ class AcousticsToolboxModel(ABC):
         model_name: str,
         model_path: Optional[Union[str, bytes, os.PathLike]] = None,
     ) -> int:
-        with self._working_directory(self.environment.tmpdir):
-            if model_path is None:
-                command = f"{model_name.lower()}.exe {self.environment.title}"
-            else:
-                command = f"{str(model_path)}/{model_name.lower()}.exe {self.environment.title}"
+        # with self._working_directory(self.environment.tmpdir):
+        if model_path is None:
+            command = f"{model_name.lower()}.exe {self.environment.title}"
+        else:
+            command = (
+                f"{str(model_path)}/{model_name.lower()}.exe {self.environment.title}"
+            )
 
-            try:
-                return subprocess.call(
-                    command,
-                    shell=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-            except:
-                raise UnknownCommandError(
-                    f"Unknown command: {str(model_path)}/{model_name.lower()}.exe"
-                )
+        try:
+            # return subprocess.call(
+            #     command,
+            #     shell=True,
+            #     stdout=subprocess.DEVNULL,
+            #     stderr=subprocess.DEVNULL,
+            # )
+            # TODO: Test for parallel processing of broadband MFP.
+            # Use of `cwd` arg makes context manager unnecessary.
+            return subprocess.run(
+                command,
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                cwd=self.environment.tmpdir,
+            )
+        except:
+            raise UnknownCommandError(
+                f"Unknown command: {str(model_path)}/{model_name.lower()}.exe"
+            )
 
     @staticmethod
     @contextlib.contextmanager
