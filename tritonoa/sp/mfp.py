@@ -31,6 +31,7 @@ class MatchedFieldProcessor:
         parameters: Union[dict, list[dict]],
         beamformer: callable = beamformer,
         multifreq_method: str = "mean",
+        max_workers: int = None,
     ):
         self.runner = runner
         self.covariance_matrix = covariance_matrix
@@ -38,16 +39,20 @@ class MatchedFieldProcessor:
         self.parameters = self._merge(parameters)
         self.beamformer = beamformer
         self.multifreq_method = MultiFrequencyMethods(multifreq_method)
+        self.max_workers = max_workers
 
     def __call__(self, parameters: dict) -> Union[np.ndarray, complex]:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> np.ndarray:
-        bf_response = []
+        # bf_response = []
         # TODO: Implement parallel processing for this loop
         # for f, k in zip(self.freq, self.covariance_matrix):
         #     replica_pressure = self.runner(self.parameters | {"freq": f, "title": f"{f:.1f}Hz"} | parameters)
         #     bf_response.append(self.beamformer(k, replica_pressure))
+
+        if self.max_workers is None:
+            max_workers = len(self.freq)
 
         with ThreadPoolExecutor(max_workers=len(self.freq)) as executor:
             bf_response = [
