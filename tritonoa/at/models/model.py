@@ -34,7 +34,6 @@ class AcousticsToolboxModel(ABC):
         model_name: str,
         model_path: Optional[Union[str, bytes, os.PathLike]] = None,
     ) -> int:
-        # with self._working_directory(self.environment.tmpdir):
         if model_path is None:
             command = f"{model_name.lower()}.exe {self.environment.title}"
         else:
@@ -43,14 +42,6 @@ class AcousticsToolboxModel(ABC):
             )
 
         try:
-            # return subprocess.call(
-            #     command,
-            #     shell=True,
-            #     stdout=subprocess.DEVNULL,
-            #     stderr=subprocess.DEVNULL,
-            # )
-            # TODO: Test for parallel processing of broadband MFP.
-            # Use of `cwd` arg makes context manager unnecessary.
             return subprocess.run(
                 command,
                 shell=True,
@@ -62,13 +53,3 @@ class AcousticsToolboxModel(ABC):
             raise UnknownCommandError(
                 f"Unknown command: {str(model_path)}/{model_name.lower()}.exe"
             )
-
-    @staticmethod
-    @contextlib.contextmanager
-    def _working_directory(path: Union[str, bytes, os.PathLike]) -> None:
-        prev_cwd = Path.cwd()
-        os.chdir(path)
-        try:
-            yield
-        finally:
-            os.chdir(prev_cwd)
