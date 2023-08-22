@@ -35,11 +35,14 @@ class MatchedFieldProcessor:
     ):
         self.runner = runner
         self.covariance_matrix = covariance_matrix
-        self.freq = freq
+        self.freq = [freq] if not isinstance(freq, Iterable) else freq
         self.parameters = self._merge(parameters)
         self.beamformer = beamformer
         self.multifreq_method = MultiFrequencyMethods(multifreq_method)
-        self.max_workers = max_workers
+        if max_workers is None:
+            self.max_workers = len(self.freq)
+        else:
+            self.max_workers = max_workers
 
     def __call__(self, parameters: dict) -> Union[np.ndarray, complex]:
         return self.evaluate(parameters)
@@ -51,10 +54,7 @@ class MatchedFieldProcessor:
         #     replica_pressure = self.runner(self.parameters | {"freq": f, "title": f"{f:.1f}Hz"} | parameters)
         #     bf_response.append(self.beamformer(k, replica_pressure))
 
-        if self.max_workers is None:
-            max_workers = len(self.freq)
-
-        with ThreadPoolExecutor(max_workers=len(self.freq)) as executor:
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             bf_response = [
                 res
                 for res in executor.map(
@@ -76,7 +76,7 @@ class MatchedFieldProcessor:
             return np.sum(np.array(bf_response), axis=0)
         elif self.multifreq_method == MultiFrequencyMethods.PRODUCT:
             return np.prod(np.array(bf_response), axis=0)
-    
+
     @staticmethod
     def _evaluate_frequency(parameters: dict, runner: Callable, beamformer: Callable):
         return beamformer(r_hat=runner(parameters))
