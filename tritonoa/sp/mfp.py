@@ -48,27 +48,30 @@ class MatchedFieldProcessor:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> np.ndarray:
-        # bf_response = []
-        # TODO: Implement parallel processing for this loop
-        # for f, k in zip(self.freq, self.covariance_matrix):
-        #     replica_pressure = self.runner(self.parameters | {"freq": f, "title": f"{f:.1f}Hz"} | parameters)
-        #     bf_response.append(self.beamformer(k, replica_pressure))
 
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            bf_response = [
-                res
-                for res in executor.map(
-                    self._evaluate_frequency,
-                    [
-                        self.parameters
-                        | {"freq": f, "title": f"{f:.0f}Hz"}
-                        | parameters
-                        for f in self.freq
-                    ],
-                    [self.runner] * len(self.freq),
-                    [partial(self.beamformer, K=k) for k in self.covariance_matrix],
-                )
-            ]
+        # TODO: Implement parallel processing for this loop
+        if self.max_workers == 1:
+            bf_response = []
+            for f, k in zip(self.freq, self.covariance_matrix):
+                replica_pressure = self.runner(self.parameters | {"freq": f, "title": f"{f:.1f}Hz"} | parameters)
+                bf_response.append(self.beamformer(k, replica_pressure))
+
+        else:
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                bf_response = [
+                    res
+                    for res in executor.map(
+                        self._evaluate_frequency,
+                        [
+                            self.parameters
+                            | {"freq": f, "title": f"{f:.0f}Hz"}
+                            | parameters
+                            for f in self.freq
+                        ],
+                        [self.runner] * len(self.freq),
+                        [partial(self.beamformer, K=k) for k in self.covariance_matrix],
+                    )
+                ]
 
         if self.multifreq_method == MultiFrequencyMethods.MEAN:
             return np.mean(np.array(bf_response), axis=0)
