@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from enum import Enum
 from typing import Callable, Iterable, Union
@@ -48,7 +48,7 @@ class MatchedFieldProcessor:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> np.ndarray:
-        with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             bf_response = [
                 res
                 for res in executor.map(
