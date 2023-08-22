@@ -156,7 +156,7 @@ class SIODataHandler:
         for f in self.files:
             data.append(np.load(f))
 
-        data = np.concatenate(data)
+        data = np.concatenate(data) if len(data) > 1 else data[0]
         if channels_to_remove is not None:
             data = np.delete(data, np.s_[channels_to_remove], axis=1)
 
