@@ -48,16 +48,6 @@ class MatchedFieldProcessor:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> np.ndarray:
-        # TODO: Implement parallel processing for this loop
-        # if self.max_workers == 1:
-        #     bf_response = []
-        #     for f, k in zip(self.freq, self.covariance_matrix):
-        #         replica_pressure = self.runner(
-        #             self.parameters | {"freq": f, "title": f"{f:.1f}Hz"} | parameters
-        #         )
-        #         bf_response.append(self.beamformer(k, replica_pressure))
-
-        # else:
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             bf_response = [
                 res
