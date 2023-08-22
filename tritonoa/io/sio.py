@@ -152,9 +152,7 @@ class SIODataHandler:
             Data and time vector.
         """
         # Load data from files
-        data = []
-        for f in self.files:
-            data.append(np.load(f))
+        data = [np.load(f) for f in self.files]
 
         data = np.concatenate(data) if len(data) > 1 else data[0]
         if channels_to_remove is not None:
