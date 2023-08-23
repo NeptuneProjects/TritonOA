@@ -72,9 +72,8 @@ def pressure_field(
         M = phi_rec.shape[0]
         N = len(r)
         p = np.zeros((M, N), dtype=complex)
-        r_corrected = r + r_offsets
         for zz in range(M):
-            hankel = hankel1(0, np.outer(-k, r_corrected[zz]))
+            hankel = hankel1(0, np.outer(-k, r + r_offsets[zz]))
             p[zz] = (phi_src * phi_rec[zz]).dot(hankel)
     else:
         p = (phi_src * phi_rec).dot(hankel1(0, np.outer(-k, r)))
