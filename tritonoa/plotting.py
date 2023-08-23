@@ -33,7 +33,7 @@ def plot_ambiguity_surface(
     if ax is None:
         ax = plt.gca()
 
-    src_z_ind, src_r_ind = np.unravel_index(np.argmax(B), (len(zvec), len(rvec)))
+    src_z_ind, src_r_ind = np.unravel_index(np.argmax(B), B.shape)
 
     im = ax.imshow(
         B,
