@@ -88,9 +88,13 @@ class Receiver(Array):
         if self.tilt is None:
             self.r_offsets = self.r_offsets
         else:
-            self.r_offsets, self.coords = compute_range_offsets(
-                self.r, self.z, self.tilt, self.azimuth, self.z_pivot
+            self.r_offsets = self.simple_array_tilt(
+                self.z, self.tilt, self.z_pivot, unit="deg"
             )
+            # self.r_offsets, self.coords = compute_range_offsets(
+            #     self.r, self.z, self.tilt, self.azimuth, self.z_pivot
+            # )
+            # self.z = self.coords[:, -1]
 
     def format_range(self) -> None:
         self.r = np.atleast_1d(self.r)
@@ -99,6 +103,36 @@ class Receiver(Array):
         self.r_min = np.min(self.r)
         self.r_max = np.max(self.r)
         self.nr = len(self.r)
+
+    @staticmethod
+    def simple_array_tilt(
+        z: np.ndarray, tilt: float, z_pivot: Optional[float], unit: str = "deg"
+    ) -> np.ndarray:
+        """Computes range offsets for a tilted array. Does NOT take into 
+        account depression of array elements due to tilt.
+
+        Parameters
+        ----------
+        z : np.ndarray
+            Vector of receiver depths [m].
+        tilt : float
+            Array tilt in "deg" or "rad".
+        z_pivot : float, default=None
+            Pivot depth [m] for array tilt. If None, defaults to maximum
+            depth of receiver array.
+        unit : str, default="deg"
+            Unit of angle ("deg" or "rad")
+        
+        Returns
+        -------
+        range_offsets : np.ndarray
+            Vector of range offsets [m] for each receiver element.
+        """
+        if unit == "deg":
+            tilt = np.deg2rad(tilt)
+        if z_pivot is None:
+            z_pivot = np.max(z)
+        return np.abs(z_pivot - z) * np.tan(-tilt)
 
     @staticmethod
     def array_tilt(
