@@ -115,7 +115,7 @@ def beamformer(
     abs_value: bool = True,
 ) -> np.ndarray:
     """Returns the output of a beamformer."""
-    K = enforce_hermitian(K)
+    # K = enforce_hermitian(K)
     w = r_hat / np.linalg.norm(r_hat, axis=0)
 
     if atype == "cbf":
