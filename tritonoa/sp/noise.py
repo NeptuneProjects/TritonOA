@@ -19,6 +19,39 @@ import numpy as np
 def added_wng(
     size: int, sigma: float = 1.0, cmplx: bool = False, seed: Optional[int] = None
 ) -> np.ndarray:
+    """Returns an array of white Gaussian noise with specified standard
+    deviation.
+
+    Parameters
+    ----------
+    size : int
+        Number of elements in the array.
+    sigma : float, default=1.0
+        Standard deviation of the noise.
+    cmplx : bool, default=False
+        Return complex-valued noise.
+    seed : int, default=None
+        Seed for the random number generator.
+
+    Returns
+    -------
+    np.ndarray
+        Array of white Gaussian noise.
+
+    Notes
+    -----
+    This function uses numpy.random.default_rng() for random number
+    generation. If seed is not specified, the default random number
+    generator is used. If seed is specified, a new random number
+    generator is created with the specified seed.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from tritonoa.sp.noise import added_wng
+    >>> added_wng(5, 1.0, False, 0)
+    array([ 1.76405235,  0.40015721,  0.97873798,  2.2408932 ,  1.86755799])
+    """
     if seed is None:
         rng = np.random
     else:
