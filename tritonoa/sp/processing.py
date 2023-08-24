@@ -351,6 +351,6 @@ def simulate_covariance(
         p = runner(parameters | {"freq": f})
         p /= np.linalg.norm(p)
         if snrdb is not None:
-            p += added_wng(p.size, snrdb_to_sigma(snrdb), cmplx=True, seed=seed)
+            p += added_wng(p.shape, snrdb_to_sigma(snrdb), cmplx=True, seed=seed)
         K.append(covariance(p))
     return np.array(K)
