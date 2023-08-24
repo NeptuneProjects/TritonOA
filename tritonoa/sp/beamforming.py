@@ -138,10 +138,36 @@ def beamformer(
 
 
 def covariance(a: np.ndarray, b: np.ndarray = None) -> np.ndarray:
+    """Returns the covariance matrix of a and b.
+
+    Parameters
+    ----------
+    a : array
+        Complex-valued pressure field.
+    b : array
+        Complex-valued pressure field.
+
+    Returns
+    -------
+    array
+        Covariance matrix of a and b.
+    """
     if b is None:
         b = a
     return a.dot(b.conj().T)
 
 
 def enforce_hermitian(A: np.ndarray) -> np.ndarray:
+    """Returns the Hermitian of A.
+
+    Parameters
+    ----------
+    A : array
+        Complex-valued matrix.
+
+    Returns
+    -------
+    array
+        Hermitian of A.
+    """
     return (A + A.conj().T) / 2
