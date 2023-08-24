@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import json
 import logging
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import numpy as np
 from scipy.fft import fft
@@ -14,6 +14,7 @@ from scipy.io import savemat
 from tqdm import tqdm
 from tritonoa.data import DataStream
 from tritonoa.sp.beamforming import covariance
+from tritonoa.sp.noise import added_wng, snrdb_to_sigma
 from tritonoa.sp.timefreq import frequency_vector
 
 log = logging.getLogger(__name__)
@@ -316,3 +317,40 @@ def get_covariance(data: np.ndarray, normalize: bool = True) -> np.ndarray:
             d /= np.linalg.norm(d)
         K[i] = covariance(d)
     return K
+
+
+def simulate_covariance(
+    runner: callable,
+    parameters: dict,
+    freq: list,
+    snrdb: Optional[float] = None,
+    seed: Optional[int] = None,
+) -> np.ndarray:
+    """Simulates a covariance matrix for a given set of frequencies.
+
+    Parameters
+    ----------
+    runner : callable
+        Function that returns a complex pressure field.
+    parameters : dict
+        Parameters for the runner function.
+    freq : list
+        List of frequencies to process.
+    snrdb : float, optional
+        Signal-to-noise ratio in dB (default: None).
+    seed : int, optional
+        Seed for random number generator (default: None).
+
+    Returns
+    -------
+    np.ndarray
+        Covariance matrix with shape (freqs, channels, channels).
+    """
+    K = []
+    for f in freq:
+        p = runner(parameters | {"freq": f})
+        p /= np.linalg.norm(p)
+        if snrdb is not None:
+            p += added_wng(p.size, snrdb_to_sigma(snrdb), cmplx=True, seed=seed)
+        K.append(covariance(p))
+    return np.array(K)
