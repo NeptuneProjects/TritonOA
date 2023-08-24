@@ -3,6 +3,7 @@
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+import json
 import logging
 from pathlib import Path
 from typing import Callable, Optional
@@ -147,6 +148,17 @@ class Processor:
             if compute_covariance:
                 np.save(savepath / "covariance.npy", K)
                 savemat(savepath / "covariance.mat", {"K": K})
+            with open(savepath / "params.json", "w") as f:
+                json.dump(
+                    {
+                        "samples_per_segment": samples_per_segment,
+                        "segments_every_n": segments_every_n,
+                        "compute_covariance": compute_covariance,
+                        "normalize_covariance": normalize_covariance,
+                        "covariance_averaging": covariance_averaging,
+                    },
+                    f,
+                )
 
         log.info(f"{freq_params.freq} Hz: Computing complex pressure.")
         p, f_hist = get_complex_pressure(
