@@ -20,7 +20,7 @@ def setup_package():
             "scipy",
             "tqdm"
         ],
-        version="0.0.5",
+        version="0.0.6",
         license="MIT",
         description="Package provides interface to ocean acoustic modeling and \
             analysis tools.",
