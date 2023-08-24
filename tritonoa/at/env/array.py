@@ -106,9 +106,9 @@ class Receiver(Array):
 
     @staticmethod
     def simple_array_tilt(
-        z: np.ndarray, tilt: float, z_pivot: Optional[float], unit: str = "deg"
+        z: np.ndarray, tilt: float, z_pivot: Optional[float] = None, unit: str = "deg"
     ) -> np.ndarray:
-        """Computes range offsets for a tilted array. Does NOT take into 
+        """Computes range offsets for a tilted array. Does NOT take into
         account depression of array elements due to tilt.
 
         Parameters
@@ -122,7 +122,7 @@ class Receiver(Array):
             depth of receiver array.
         unit : str, default="deg"
             Unit of angle ("deg" or "rad")
-        
+
         Returns
         -------
         range_offsets : np.ndarray
