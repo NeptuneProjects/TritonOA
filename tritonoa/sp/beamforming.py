@@ -94,7 +94,7 @@ def bf_mvdr(K: np.ndarray, w: np.ndarray) -> np.ndarray:
     Henrik Schmidt. 2011. Computational Ocean Acoustics (2nd. ed.).
     Springer Publishing Company, Incorporated.
     """
-    return 1 / (w.conj().T.dot(np.linalg.inv(K)).dot(w))
+    return np.diag(1 / (w.conj().T.dot(np.linalg.inv(K)).dot(w)))
 
 
 def bf_music(K: np.ndarray, w: np.ndarray, num_src: int = 1) -> np.ndarray:
