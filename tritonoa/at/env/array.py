@@ -88,13 +88,13 @@ class Receiver(Array):
         if self.tilt is None:
             self.r_offsets = self.r_offsets
         else:
-            self.r_offsets = self.simple_array_tilt(
-                self.z, self.tilt, self.z_pivot, unit="deg"
-            )
-            # self.r_offsets, self.coords = compute_range_offsets(
-            #     self.r, self.z, self.tilt, self.azimuth, self.z_pivot
+            # self.r_offsets = self.simple_array_tilt(
+            #     self.z, self.tilt, self.z_pivot, unit="deg"
             # )
-            # self.z = self.coords[:, -1]
+            self.r_offsets, self.coords = compute_range_offsets(
+                self.r, self.z, self.tilt, self.azimuth, self.z_pivot
+            )
+            self.z = self.coords[:, -1]
 
     def format_range(self) -> None:
         self.r = np.atleast_1d(self.r)
