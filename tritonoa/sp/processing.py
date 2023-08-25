@@ -128,6 +128,7 @@ class Processor:
         with open(destination / "params.json", "w") as f:
             json.dump(
                 {
+                    "fs": self.fs,
                     "samples_per_segment": samples_per_segment,
                     "segments_every_n": segments_every_n,
                     "compute_covariance": compute_covariance,
@@ -135,6 +136,7 @@ class Processor:
                     "covariance_averaging": covariance_averaging,
                 },
                 f,
+                indent=4,
             )
 
         log.info(f"{self.frequencies} Hz: Processing complete.")
