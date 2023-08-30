@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import secrets
 from typing import Any, List, Union
 
 from tritonoa.at.env.halfspace import Bottom, Top
@@ -23,14 +24,15 @@ class AcousticsToolboxEnvironment(ABC):
     def __post_init__(self):
         self.nmedia = len(self.layers)
         self.tmpdir = Path(self.tmpdir)
-    
+        self.title += str(secrets.token_hex(4))
+
     @abstractmethod
     def write_envfil(self) -> Any:
         pass
-    
+
     def _check_tmpdir(self) -> None:
         self.tmpdir.mkdir(parents=True, exist_ok=True)
-    
+
     def _write_envfil(self) -> os.PathLike:
         self._check_tmpdir()
         envfil = self.tmpdir / f"{self.title}.env"

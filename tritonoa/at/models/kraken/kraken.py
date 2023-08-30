@@ -62,6 +62,7 @@ class KrakenModel(AcousticsToolboxModel):
         model_name: str,
         model_path: Optional[Union[str, bytes, os.PathLike]] = None,
         fldflag: bool = False,
+        keep_files: bool = False,
     ) -> None:
         # def run(self, model="kraken", fldflag=False, verbose=False):
         """Returns modes, pressure field, rvec, zvec"""
@@ -74,6 +75,8 @@ class KrakenModel(AcousticsToolboxModel):
         self.modes.read_modes(self.environment.tmpdir / self.environment.title)
         if fldflag:
             _ = self.modes.field()
+        if not keep_files:
+            clean_up_kraken_files(self.environment.tmpdir)
 
 
 def clean_up_kraken_files(path: Union[str, bytes, os.PathLike]) -> None:
