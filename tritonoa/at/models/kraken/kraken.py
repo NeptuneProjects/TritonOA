@@ -76,9 +76,9 @@ class KrakenModel(AcousticsToolboxModel):
         if fldflag:
             _ = self.modes.field()
         if not keep_files:
-            clean_up_kraken_files(self.environment.tmpdir)
+            clean_up_kraken_files(self.environment.tmpdir, pattern=self.environment.title)
 
 
-def clean_up_kraken_files(path: Union[str, bytes, os.PathLike]) -> None:
+def clean_up_kraken_files(path: Union[str, bytes, os.PathLike], pattern: str = "*") -> None:
     KRAKEN_EXTENSIONS = ["env", "mod", "prt"]
-    [[f.unlink() for f in Path(path).glob(f"*.{ext}")] for ext in KRAKEN_EXTENSIONS]
+    [[f.unlink() for f in Path(path).glob(f"{pattern}.{ext}")] for ext in KRAKEN_EXTENSIONS]
