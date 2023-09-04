@@ -4,7 +4,6 @@
 from typing import Optional, Union
 
 import numpy as np
-from scipy.special import hankel1
 
 
 def normalize_pressure(p: Union[float, np.ndarray], log: bool = False) -> np.ndarray:
@@ -73,26 +72,35 @@ def pressure_field(
     #     N = len(r)
     #     p = np.zeros((M, N), dtype=complex)
     #     for zz in range(M):
-    #         hankel = hankel1(0, np.outer(-k, r + r_offsets[zz]))
-    #         p[zz] = (phi_src * phi_rec[zz]).dot(hankel)
-    # else:
-    #     p = (phi_src * phi_rec).dot(hankel1(0, np.outer(-k, r)))
-    # p = (1j / 4) * p
+    #         range_dep = np.outer(k, r + r_offsets[zz])
+    #         hankel = (
+    #             np.exp(1j * range_dep.conj()) / np.sqrt(np.real(range_dep))
+    #         )
+    #         phi_comb = (phi_src * phi_rec[zz])
+    #         p[zz] = phi_comb.dot(hankel)
 
-    # Asymptotic approximation to Hankel function
-    if r_offsets is not None:
-        M = phi_rec.shape[0]
-        N = len(r)
-        p = np.zeros((M, N), dtype=complex)
-        for zz in range(M):
-            range_dep = np.outer(k, r + r_offsets[zz])
-            hankel = np.exp(1j * range_dep.conj()) / np.sqrt(np.real(range_dep))
-            p[zz] = (phi_src * phi_rec[zz]).dot(hankel)
-    else:
-        range_dep = np.outer(k, r)
-        hankel = np.exp(1j * range_dep.conj()) / np.sqrt(np.real(range_dep))
-        p = (phi_src * phi_rec).dot(hankel)
-    p *= -np.exp(1j * np.pi / 4)
-    p /= np.sqrt(8 * np.pi)
+    # else:
+    #     range_dep = np.outer(k, r)
+    #     hankel = (np.exp(1j * range_dep.conj()) / np.sqrt(np.real(range_dep)))
+    #     phi_comb = (phi_src * phi_rec)
+    #     p = phi_comb.dot(hankel)
+    # p *= -np.exp(1j * np.pi / 4)
+    # p /= np.sqrt(8 * np.pi)
+    # p = p.conj()
+    # return p
+
+    # Improved implementation
+
+    r = np.atleast_2d(r)
+    if r_offsets is None:
+        r_offsets = np.zeros(phi_rec.shape[0])
+    if r_offsets.ndim == 1:
+        r_offsets = np.atleast_2d(r_offsets).T
+
+    range_dep = np.einsum("kl,ij->kij", k, r + r_offsets)
+    hankel = np.exp(1j * range_dep.conj()) / np.sqrt(np.real(range_dep))
+    phi_comb = (phi_src * phi_rec)
+    p = np.einsum("ik,kij->ij", phi_comb, hankel)
+    p *= -np.exp(1j * np.pi / 4) / np.sqrt(8 * np.pi)
     p = p.conj()
     return p
