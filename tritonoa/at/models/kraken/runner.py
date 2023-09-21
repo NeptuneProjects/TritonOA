@@ -7,13 +7,13 @@ from tritonoa.at.env.ssp import SoundSpeedProfileAT, SSPLayer
 from tritonoa.at.models.kraken.kraken import KrakenEnvironment, KrakenModel
 
 
-def run_kraken(parameters: dict) -> complex:
+def build_kraken_environment(parameters: dict) -> KrakenEnvironment:
     layers = [
         SSPLayer(SoundSpeedProfileAT(**layer_kwargs))
         for layer_kwargs in parameters.get("layerdata")
     ]
-    
-    environment = KrakenEnvironment(
+
+    return KrakenEnvironment(
         title=parameters.get("title", "Kraken"),
         freq=parameters.get("freq", 100.0),
         layers=layers,
@@ -50,8 +50,22 @@ def run_kraken(parameters: dict) -> complex:
         chigh=parameters.get("chigh", 1600.0),
     )
 
+
+def run_kraken(parameters: dict) -> complex:
+    environment = build_kraken_environment(parameters)
     # Instantiate & Run Model
     kmodel = KrakenModel(environment)
     kmodel.run(model_name=parameters.get("model", "KRAKEN"), fldflag=True)
     # Return Complex Pressure at Receiver
     return kmodel.modes.p
+
+
+# def run_kraken_adiabatic(parameters: dict) -> complex:
+#     environment_src = build_kraken_environment(parameters["src"])
+#     environment_rec = build_kraken_environment(parameters["rec"])
+
+#     # Instantiate & Run Source Model
+#     kmodel_src = KrakenModel(environment_src)
+#     kmodel_src.run(model_name=parameters.get("model", "KRAKEN"), fldflag=True)
+
+#     return
