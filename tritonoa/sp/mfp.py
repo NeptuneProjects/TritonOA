@@ -28,7 +28,8 @@ class MatchedFieldProcessor:
         runner: callable,
         covariance_matrix: Union[np.ndarray, Iterable[np.ndarray]],
         freq: Union[float, Iterable[float]],
-        parameters: Union[dict, list[dict]],
+        parameters: Union[dict, list[dict]] = {},
+        format_parameters: callable = None,
         beamformer: callable = beamformer,
         multifreq_method: str = "mean",
         max_workers: int = None,
@@ -37,6 +38,11 @@ class MatchedFieldProcessor:
         self.covariance_matrix = covariance_matrix
         self.freq = [freq] if not isinstance(freq, Iterable) else freq
         self.parameters = self._merge(parameters)
+        self.format_parameters = (
+            self._default_parameter_fmt
+            if format_parameters is None
+            else format_parameters
+        )
         self.beamformer = beamformer
         self.multifreq_method = MultiFrequencyMethods(multifreq_method)
         if max_workers is None:
@@ -54,9 +60,12 @@ class MatchedFieldProcessor:
                 for res in executor.map(
                     self._evaluate_frequency,
                     [
-                        self.parameters
-                        | {"freq": f, "title": f"{f:.0f}Hz"}
-                        | parameters
+                        self.format_parameters(
+                            freq=f,
+                            title=f"{f:.0f}Hz",
+                            fixed_parameters=self.parameters,
+                            search_parameters=parameters,
+                        )
                         for f in self.freq
                     ],
                     [self.runner] * len(self.freq),
@@ -72,7 +81,15 @@ class MatchedFieldProcessor:
             return np.prod(np.array(bf_response), axis=0)
 
     @staticmethod
-    def _evaluate_frequency(parameters: dict, runner: Callable, beamformer: Callable):
+    def _default_parameter_fmt(
+        freq: float, title: str, fixed_parameters: dict, search_parameters: dict
+    ) -> dict:
+        return fixed_parameters | {"freq": freq, "title": title} | search_parameters
+
+    @staticmethod
+    def _evaluate_frequency(
+        parameters: dict, runner: Callable, beamformer: Callable
+    ) -> np.ndarray:
         return beamformer(r_hat=runner(parameters))
 
     @staticmethod
