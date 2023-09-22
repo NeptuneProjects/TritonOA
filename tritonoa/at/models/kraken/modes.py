@@ -274,7 +274,9 @@ def format_adiabatic_modes(
         receiver_modes (Modes): Modes from receiver
 
     Returns:
-        Modes from source, Modes from receiver, Wavenumbers
+        Modes from source.
+        Modes from receiver.
+        Wavenumbers.
     """
     M = min(source_modes.M, receiver_modes.M)
     phi_src = source_modes.phi_src[:, 0:M]
