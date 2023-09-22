@@ -260,3 +260,26 @@ class ModesHalfspace:
     alphaI: np.ndarray = field(default_factory=np.array([]))
     betaI: np.ndarray = field(default_factory=np.array([]))
     rho: np.ndarray = field(default_factory=np.array([]))
+
+
+def format_adiabatic_modes(
+    source_modes: Modes, receiver_modes: Modes
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Format modes for adiabatic approximation by rejecting higher-order
+    modes that are not common to both locations and averaging the
+    wavenumbers.
+
+    Args:
+        source_modes (Modes): Modes from source
+        receiver_modes (Modes): Modes from receiver
+
+    Returns:
+        Modes from source, Modes from receiver, Wavenumbers
+    """
+    M = min(source_modes.M, receiver_modes.M)
+    phi_src = source_modes.phi_src[:, 0:M]
+    phi_rec = receiver_modes.phi_rec[:, 0:M]
+    k_src = source_modes.k[0:M]
+    k_rec = receiver_modes.k[0:M]
+    k = (k_src + k_rec) / 2
+    return phi_src, phi_rec, k
