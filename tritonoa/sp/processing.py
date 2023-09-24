@@ -179,6 +179,7 @@ class Processor:
             if covariance_averaging is not None:
                 K = average_covariance(K, covariance_averaging=covariance_averaging)
         log.info(f"{freq_params.freq} Hz: Completed computing covariance matrices.")
+        log.info(f"{K.shape[0]} segments formed.")
         log.info(f"{freq_params.freq} Hz: Saving data.")
         _save_data()
         log.info(f"{freq_params.freq} Hz: Data saved.")

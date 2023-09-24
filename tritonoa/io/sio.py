@@ -162,10 +162,13 @@ class SIODataHandler:
         t = tf.create_time_vector(data.shape[0], fs)
         # Specify starting file datetime
         base_time = datetime.datetime.strptime(base_time, "%y%j %H:%M")
+        log.info(f"Base time: {base_time}")
         # Specify analysis starting datetime
         start = datetime.datetime.strptime(start, "%y%j %H:%M")
+        log.info(f"Start time: {start}")
         # Specify analysis ending datetime
         end = datetime.datetime.strptime(end, "%y%j %H:%M")
+        log.info(f"End time: {end}")
         # Create datetime vector referencing base_time
         dt = tf.create_datetime_vector(t, base_time)
         # Find indeces of analysis data
