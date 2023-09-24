@@ -30,7 +30,7 @@ class ParameterFormatter(Protocol):
         search_parameters: Search parameters.
 
     Returns:
-        Dictionary with the formatted parameters.
+        Formatted parameters.
     """
 
     def __call__(
@@ -57,6 +57,23 @@ class MatchedFieldProcessor:
         multifreq_method: str = "mean",
         max_workers: int = None,
     ):
+        """Initialize the MatchedFieldProcessor class.
+
+        Args:
+            runner: Forward model runner.
+            covariance_matrix: Covariance matrix, dimensions FxMxM.
+            freq: Frequencies to evaluate, dimension F.
+            parameters: Fixed parameters that can be overridden by calls to `evaluate`.
+            parameter_formatter: Maps input parameters to model parameterization.
+            beamformer: Computes the ambiguity surface.
+            multifreq_method: Specifies how to combine the beamformer responses
+                for multiple frequencies.
+            max_workers: Maximum number of workers for multithreading; defaults to
+                the number of frequencies F.
+
+        Returns:
+            MatchedFieldProcessor object.
+        """
         self.runner = runner
         self.covariance_matrix = covariance_matrix
         self.freq = [freq] if not isinstance(freq, Iterable) else freq
@@ -77,6 +94,17 @@ class MatchedFieldProcessor:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> np.ndarray:
+        """Evaluate the matched field processor ambiguity function.
+
+        Multi-frequency MFP is handled by multithreading calls to the
+        forward model for each frequency.
+
+        Args:
+            parameters: Dictionary with the parameters for the MFP.
+
+        Returns:
+            Ambiguity function value.
+        """
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             bf_response = [
                 res
