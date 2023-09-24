@@ -4,7 +4,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from enum import Enum
-from typing import Callable, Iterable, Union
+from typing import Callable, Iterable, Protocol, Union
 
 import numpy as np
 
@@ -20,6 +20,29 @@ class MultiFrequencyMethods(Enum):
     PRODUCT = "product"
 
 
+class ParameterFormatter(Protocol):
+    """Protocol for formatting matched field processor parameters.
+
+    Args:
+        freq: Frequency.
+        title: Title.
+        fixed_parameters: Fixed parameters.
+        search_parameters: Search parameters.
+
+    Returns:
+        Dictionary with the formatted parameters.
+    """
+
+    def __call__(
+        self,
+        freq: float,
+        title: str,
+        fixed_parameters: dict,
+        search_parameters: dict,
+    ) -> dict:
+        ...
+
+
 class MatchedFieldProcessor:
     """Class for evaluating the matched field processor (MFP) ambiguity."""
 
@@ -29,7 +52,7 @@ class MatchedFieldProcessor:
         covariance_matrix: Union[np.ndarray, Iterable[np.ndarray]],
         freq: Union[float, Iterable[float]],
         parameters: Union[dict, list[dict]] = {},
-        format_parameters: callable = None,
+        parameter_formatter: ParameterFormatter = None,
         beamformer: callable = beamformer,
         multifreq_method: str = "mean",
         max_workers: int = None,
@@ -40,8 +63,8 @@ class MatchedFieldProcessor:
         self.parameters = self._merge(parameters)
         self.format_parameters = (
             self._default_parameter_fmt
-            if format_parameters is None
-            else format_parameters
+            if parameter_formatter is None
+            else parameter_formatter
         )
         self.beamformer = beamformer
         self.multifreq_method = MultiFrequencyMethods(multifreq_method)
