@@ -62,13 +62,14 @@ class MatchedFieldProcessor:
             runner: Forward model runner.
             covariance_matrix: Covariance matrix, dimensions FxMxM.
             freq: Frequencies to evaluate, dimension F.
-            parameters: Fixed parameters that can be overridden by calls to `evaluate`.
+            parameters: Fixed parameters that can be overridden by calls to
+                `evaluate`.
             parameter_formatter: Maps input parameters to model parameterization.
             beamformer: Computes the ambiguity surface.
             multifreq_method: Specifies how to combine the beamformer responses
                 for multiple frequencies.
-            max_workers: Maximum number of workers for multithreading; defaults to
-                the number of frequencies F.
+            max_workers: Maximum number of workers for multithreading; defaults
+                to the number of frequencies F.
 
         Returns:
             MatchedFieldProcessor object.
