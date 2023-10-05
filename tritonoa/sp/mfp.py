@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from functools import partial
 from enum import Enum
 from typing import Callable, Iterable, Protocol, Union
@@ -97,7 +98,10 @@ class MatchedFieldProcessor:
         """Evaluate the matched field processor ambiguity function.
 
         Multi-frequency MFP is handled by multithreading calls to the
-        forward model for each frequency.
+        forward model for each frequency. *Note:* The `fixed_parameters`
+        are supplied as a deep copy to the forward model runner, so that
+        the runner can modify the parameters without affecting the
+        original parameters.
 
         Args:
             parameters: Dictionary with the parameters for the MFP.
@@ -114,7 +118,7 @@ class MatchedFieldProcessor:
                         self.format_parameters(
                             freq=f,
                             title=f"{f:.0f}Hz",
-                            fixed_parameters=self.parameters,
+                            fixed_parameters=deepcopy(self.parameters),
                             search_parameters=parameters,
                         )
                         for f in self.freq
