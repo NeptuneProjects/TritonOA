@@ -40,7 +40,7 @@ def build_kraken_environment(parameters: dict) -> KrakenEnvironment:
         bottom=Bottom(
             opt=parameters.get("bot_opt", "A"),
             sigma=parameters.get("bot_sigma", 0.0),
-            z=parameters.get("bot_z", layers[-1].z_max + 1),
+            z=parameters.get("bot_z", layers[-1].z_max),
             c_p=parameters.get("bot_c_p"),
             c_s=parameters.get("bot_c_s", 0.0),
             rho=parameters.get("bot_rho"),
