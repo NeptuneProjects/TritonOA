@@ -101,7 +101,9 @@ class MatchedFieldProcessor:
         forward model for each frequency. *Note:* The `fixed_parameters`
         are supplied as a deep copy to the forward model runner, so that
         the runner can modify the parameters without affecting the
-        original parameters.
+        original parameters. Similarly, the `search_parameters` are
+        extracted as keywords to the runner to avoid mutability problems
+        in multi-frequency processing.
 
         Args:
             parameters: Dictionary with the parameters for the MFP.
@@ -119,7 +121,7 @@ class MatchedFieldProcessor:
                             freq=f,
                             title=f"{f:.0f}Hz",
                             fixed_parameters=deepcopy(self.parameters),
-                            search_parameters=parameters,
+                            search_parameters={**parameters},
                         )
                         for f in self.freq
                     ],
