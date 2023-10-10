@@ -68,6 +68,13 @@ def bf_cbf_ml(K: np.ndarray, w: np.ndarray):
     return np.diag(np.trace(K) - w.conj().T.dot(K).dot(w))
 
 
+def _bf_cbf_ml(K: np.ndarray, w: np.ndarray):
+    phi = bf_cbf_ml(K, w)
+    n_h = K.shape[0]
+    denom = np.e * np.pi * phi
+    return (n_h / denom) ** n_h
+
+
 def bf_mvdr(K: np.ndarray, w: np.ndarray) -> np.ndarray:
     """Returns MVDR processor (e.g., for beamforming or matched
     field processing).
@@ -122,6 +129,8 @@ def beamformer(
         B = bf_cbf(K, w)
     elif atype == "cbf_ml":
         B = bf_cbf_ml(K, w)
+    elif atype == "cbf_ml2":
+        B = _bf_cbf_ml(K, w)
     elif atype == "mvdr":
         B = bf_mvdr(K, w)
     elif atype == "music":
