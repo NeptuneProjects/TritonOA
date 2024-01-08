@@ -16,5 +16,6 @@ tests
 tutorials/XBT.csv
 tritonoa/at/bin
 
+!RunBELLHOP.ipynb
 !RunKRAKEN.ipynb
 !RunMFP.ipynb
