@@ -1,14 +1,26 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-import os
+from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from tritonoa.at.env.array import Receiver, Source
 from tritonoa.at.env.env import AcousticsToolboxEnvironment
 from tritonoa.at.models.kraken.modes import Modes
 from tritonoa.at.models.model import AcousticsToolboxModel
+from tritonoa.utils import clean_up_files
+
+
+class KrakenModelExtensions(Enum):
+    ENV = "env"
+    MOD = "mod"
+    PRT = "prt"
+
+
+class KrakenModels(Enum):
+    KRAKEN = "kraken"
+    KRAKENC = "krakenc"
 
 
 @dataclass(kw_only=True)
@@ -18,7 +30,7 @@ class KrakenEnvironment(AcousticsToolboxEnvironment):
     clow: float = 0
     chigh: Optional[float] = None
 
-    def write_envfil(self) -> Union[str, bytes, os.PathLike]:
+    def write_envfil(self) -> Path:
         envfil = self._write_envfil()
         with open(envfil, "a") as f:
             # Block 7 - Phase Speed Limits
@@ -59,13 +71,10 @@ class KrakenModel(AcousticsToolboxModel):
     def run(
         self,
         model_name: str,
-        model_path: Optional[Union[str, bytes, os.PathLike]] = None,
+        model_path: Optional[Path] = None,
         fldflag: bool = False,
         keep_files: bool = False,
     ) -> None:
-        # def run(self, model="kraken", fldflag=False, verbose=False):
-        """Returns modes, pressure field, rvec, zvec"""
-
         _ = self.environment.write_envfil()
         self.run_model(model_name=model_name, model_path=model_path)
         self.modes = Modes(
@@ -75,9 +84,8 @@ class KrakenModel(AcousticsToolboxModel):
         if fldflag:
             _ = self.modes.field()
         if not keep_files:
-            clean_up_kraken_files(self.environment.tmpdir, pattern=self.environment.title)
-
-
-def clean_up_kraken_files(path: Union[str, bytes, os.PathLike], pattern: str = "*") -> None:
-    KRAKEN_EXTENSIONS = ["env", "mod", "prt"]
-    [[f.unlink() for f in Path(path).glob(f"{pattern}.{ext}")] for ext in KRAKEN_EXTENSIONS]
+            clean_up_files(
+                self.environment.tmpdir,
+                extensions=[i.value for i in KrakenModelExtensions],
+                pattern=self.environment.title,
+            )
