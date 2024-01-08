@@ -11,13 +11,13 @@ from tritonoa.sp.physics import pressure_field
 
 
 def build_kraken_environment(parameters: dict) -> KrakenEnvironment:
-    """Helper function to generate a KrakenEnvironment from a dictionary.
+    """Helper function to generate a `KrakenEnvironment` from a dictionary.
 
     Args:
-        parameters: Dictionary with the parameters for the KrakenEnvironment.
+        parameters: Dictionary with the parameters for the `KrakenEnvironment`.
 
     Returns:
-        KrakenEnvironment object.
+        `KrakenEnvironment` object.
     """
     layers = [
         SSPLayer(SoundSpeedProfileAT(**layer_kwargs))
@@ -62,11 +62,11 @@ def build_kraken_environment(parameters: dict) -> KrakenEnvironment:
     )
 
 
-def run_kraken(parameters: dict) -> np.ndarray:
-    """Range-independent Kraken model.
+def run_kraken(parameters: dict, keep_files=False) -> np.ndarray:
+    """Compute pressure field from range-independent Kraken model.
 
     Args:
-        parameters: Dictionary with the parameters for the KrakenEnvironment.
+        parameters: Dictionary with the parameters for the `KrakenEnvironment`.
 
     Returns:
         Complex pressure field with dimension (depth x range).
@@ -74,16 +74,21 @@ def run_kraken(parameters: dict) -> np.ndarray:
     environment = build_kraken_environment(parameters)
     # Instantiate & Run Model
     kmodel = KrakenModel(environment)
-    kmodel.run(model_name=parameters.get("model", "KRAKEN"), fldflag=True)
+    kmodel.run(
+        model_name=parameters.get("model", "KRAKEN"),
+        fldflag=True,
+        keep_files=keep_files,
+    )
     # Return Complex Pressure at Receiver
     return kmodel.modes.p
 
 
-def run_kraken_adiabatic(parameters: dict) -> np.ndarray:
-    """Range-dependent Kraken model using adiabatic approximation.
+def run_kraken_adiabatic(parameters: dict, keep_files=False) -> np.ndarray:
+    """Compute range-dependent preesure field from Kraken model using adiabatic
+    approximation.
 
     Args:
-        parameters: Dictionary with the parameters for the KrakenEnvironment.
+        parameters: Dictionary with the parameters for the `KrakenEnvironment`.
 
     Returns:
         Complex pressure field with dimension (depth x range).
@@ -93,13 +98,21 @@ def run_kraken_adiabatic(parameters: dict) -> np.ndarray:
     parameters_src = parameters.get("src")
     environment_src = build_kraken_environment(parameters_src)
     kmodel_src = KrakenModel(environment_src)
-    kmodel_src.run(model_name=parameters_src.get("model", "KRAKEN"), fldflag=False)
+    kmodel_src.run(
+        model_name=parameters_src.get("model", "KRAKEN"),
+        fldflag=False,
+        keep_files=keep_files,
+    )
 
     # Instantiate & Run Receiver Model
     parameters_rec = parameters.get("rec")
     environment_rec = build_kraken_environment(parameters_rec)
     kmodel_rec = KrakenModel(environment_rec)
-    kmodel_rec.run(model_name=parameters_rec.get("model", "KRAKEN"), fldflag=False)
+    kmodel_rec.run(
+        model_name=parameters_rec.get("model", "KRAKEN"),
+        fldflag=False,
+        keep_files=keep_files,
+    )
 
     # Format Adiabatic Modes
     phi_src, phi_rec, k = format_adiabatic_modes(kmodel_src.modes, kmodel_rec.modes)
