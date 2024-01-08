@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import os
 from pathlib import Path
 import secrets
 from typing import Any, List, Union
@@ -18,7 +17,7 @@ class AcousticsToolboxEnvironment(ABC):
     layers: List[SSPLayer]
     top: Top
     bottom: Bottom
-    tmpdir: Union[str, bytes, os.PathLike] = "."
+    tmpdir: Union[str, bytes, Path] = "."
 
     def __post_init__(self):
         self.nmedia = len(self.layers)
@@ -32,7 +31,7 @@ class AcousticsToolboxEnvironment(ABC):
     def _check_tmpdir(self) -> None:
         self.tmpdir.mkdir(parents=True, exist_ok=True)
 
-    def _write_envfil(self) -> os.PathLike:
+    def _write_envfil(self) -> Path:
         self._check_tmpdir()
         envfil = self.tmpdir / f"{self.title}.env"
         with open(envfil, "w") as f:

@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from abc import ABC, abstractmethod
-import contextlib
-import os
 from pathlib import Path
 import subprocess
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from tritonoa.at.env.env import AcousticsToolboxEnvironment
 
@@ -23,7 +21,7 @@ class AcousticsToolboxModel(ABC):
     def run(
         self,
         model_name: str,
-        model_path: Optional[Union[str, bytes, os.PathLike]] = None,
+        model_path: Optional[Path] = None,
         *args,
         **kwargs,
     ) -> Any:
@@ -32,7 +30,7 @@ class AcousticsToolboxModel(ABC):
     def run_model(
         self,
         model_name: str,
-        model_path: Optional[Union[str, bytes, os.PathLike]] = None,
+        model_path: Optional[Path] = None,
     ) -> int:
         if model_path is None:
             command = f"{model_name.lower()}.exe {self.environment.title}"
