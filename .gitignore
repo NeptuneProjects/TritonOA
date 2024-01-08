@@ -6,6 +6,7 @@ __pycache__
 **/*.swp
 **/*.flp
 **/*.mod
+**/*.ray
 .ipynb_checkpoints
 .vscode
 *.ipynb
