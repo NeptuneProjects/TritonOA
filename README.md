@@ -25,11 +25,15 @@ Future intended functionality:
 - IO functions for reading in experimental data.
 - Robust signal processing workflows (e.g., matched field processing)
 
-## Installation
+## Setup
 ### Prerequisites
-1. [Install Acoustics Toolbox](https://oalib-acoustics.org/models-and-software/acoustics-toolbox/) ([Mac users](https://github.com/NeptuneProjects/TritonOA/blob/master/docs/install_AT_MacOS.md)).
+1. [Install Acoustics Toolbox](https://oalib-acoustics.org/models-and-software/acoustics-toolbox/) ([Mac users](https://github.com/NeptuneProjects/TritonOA/blob/master/setup/install_AT_MacOS.md)).
 
-### Build from source:
+### Installation
+
+`TritonOA` can be built directly from source or installed using `pip`.
+
+#### Build from source:
 1. Open a terminal and navigate to the desired installation directory.
 2. Save `TritonOA.yml` to the directory by running:  
 a. **MacOS**:  
@@ -41,9 +45,9 @@ b. **Linux**:
 4. Once the environment is set up and the package is installed, activate your environment by running:  
 `conda activate TritonOA`
 
-### Using pip:
+#### Using pip:
 1. In a virtual environment, run:  
 `pip install git+https://github.com/NeptuneProjects/TritonOA.git`
 
 ## Usage
-A Jupyter notebooks illustrating use cases is provided in the `tutorials` folder.
+A Jupyter notebooks illustrating use cases is provided in the [`tutorials`](https://github.com/NeptuneProjects/TritonOA/blob/master/tutorials/) folder.
