@@ -1,7 +1,7 @@
 # Triton Ocean Acoustics (TritonOA)
 William Jenkins<br>
 Scripps Institution of Oceanography<br>
-wjenkins |a|t| ucsd |d|o|t| edu<br>
+wjenkins@ucsd.edu<br>
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -27,7 +27,7 @@ Future intended functionality:
 
 ## Setup
 ### Prerequisites
-1. [Install Acoustics Toolbox](https://oalib-acoustics.org/models-and-software/acoustics-toolbox/) ([Mac users](https://github.com/NeptuneProjects/TritonOA/blob/master/setup/install_AT_MacOS.md)).
+1. [Install Acoustics Toolbox](https://oalib-acoustics.org/models-and-software/acoustics-toolbox/) ([Mac users](setup/install_AT_MacOS.md)).
 
 ### Installation
 
@@ -50,4 +50,4 @@ b. **Linux**:
 `pip install git+https://github.com/NeptuneProjects/TritonOA.git`
 
 ## Usage
-A Jupyter notebooks illustrating use cases is provided in the [`tutorials`](https://github.com/NeptuneProjects/TritonOA/blob/master/tutorials/) folder.
+A Jupyter notebooks illustrating use cases is provided in the [`tutorials`](tutorials/) folder.
