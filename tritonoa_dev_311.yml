@@ -12,7 +12,7 @@ dependencies:
   - numpy
   - pandas
   - pip
-  - scipy
+  - scipy`
   - tqdm
   - pip:
     # - git+https://github.com/NeptuneProjects/TritonOA.git
